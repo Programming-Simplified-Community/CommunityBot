@@ -1,0 +1,28 @@
+﻿@using CodeAssistant.Reports.Python
+@model PythonMessage[]
+
+
+<div class="container">
+    @foreach (var entry in Model)
+    {
+        var discoveredOn = string.Empty;
+        
+        if (entry.Location.Line.HasValue)
+        {
+            discoveredOn = $"Found on line {entry.Location.Line.Value} {(entry.Location.Character.HasValue ? $" on column {entry.Location.Character.Value}" : "")}";
+        }
+        
+        <div class="bg-dark p-3">
+            @if (discoveredOn != "")
+            {
+                <h2>@discoveredOn</h2>
+            }
+            <p>According to @entry.Source - with code @entry.Code</p>
+            <p>@entry.Message</p>
+            
+            <pre><code class="language-python">@entry.CommentedCode</code></pre>
+        </div>
+        
+        <br/><br/>
+    }
+</div>

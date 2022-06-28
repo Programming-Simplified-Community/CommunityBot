@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  api-db:
+    container_name: social-coder-api-db
+    image: mysql:latest
+    ports:
+      - "3306:3306"
+    expose:
+      - '3306'
+    environment:
+      MYSQL_DATABASE: 'socialcoder'
+      MYSQL_USER: 'simplified'
+      MYSQL_PASSWORD: 'testing1122'
+      MYSQL_ROOT_PASSWORD: 'testing1122'
+    volumes:
+      - $PWD\\Database:/var/lib/mysql

@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+    api:
+        container_name: social-coder-api
+        image: social-coder-api
+        hostname: social-coder-api
+        ports:
+            - "5000:80"
+            - "5001:443"
+        environment:
+            - ASPNETCORE_URLS="https://+;http://+"
+            - ASPNETCORE_ENVIRONMENT=Development
+        volumes:
+            - $Env:APPDATA\microsoft\UserSecrets\:/root/.microsoft/usersecrets
+            - $Env:USERPROFILE\.aspnet\https:/root/.aspnet/https/
