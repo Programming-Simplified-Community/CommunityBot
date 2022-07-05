@@ -6,10 +6,6 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace CodeJam.Services;
@@ -268,7 +264,14 @@ public class CodeJamBot : BackgroundService, IDiscordService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Starting CodeJamBot...");
+
+        _client.Disconnected += exception =>
+        {
+            _logger.LogError("Error. Bot is disconnecting: {Exception}", exception);
+            return Task.CompletedTask;
+        };
         
+        _logger.LogWarning(_config.GetValue<string>("CodeJamBot:Discord:Token"));
         await _client.LoginAsync(TokenType.Bot, _config.GetValue<string>("CodeJamBot:Discord:Token"));
         
         await _client.StartAsync();

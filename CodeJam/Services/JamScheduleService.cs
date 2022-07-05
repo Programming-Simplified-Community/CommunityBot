@@ -3,10 +3,6 @@ using Data;
 using Data.CodeJam;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace CodeJam.Services;
 
@@ -147,8 +143,11 @@ public class JamScheduleService : BackgroundService
         {
             foreach (var reg in registrations)
             {
-                var daysLeft = (int)(now - reg.Topic.RegistrationEndOn).TotalDays;
-                var hoursLeft = (int)(now - reg.Topic.RegistrationEndOn).TotalHours;
+                if (!(now >= reg.Topic.RegistrationStartOn && now <= reg.Topic.RegistrationEndOn))
+                    continue;
+                
+                var daysLeft = (int)Math.Abs((now - reg.Topic.RegistrationEndOn).TotalDays);
+                var hoursLeft = (int)Math.Abs((now - reg.Topic.RegistrationEndOn).TotalHours);
                 
                 if (daysLeft is > 1 and <= 2)
                     await SendDayMessage(reg.Topic, reg.Registration, reg.User, daysLeft);

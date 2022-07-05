@@ -2,8 +2,7 @@
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using IResult = Discord.Interactions.IResult;
 
 namespace CodeJam.Services;
 

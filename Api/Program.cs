@@ -1,35 +1,17 @@
 using CodeJam;
 using Infrastructure;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddInfrastructure(builder.Configuration)
-    .AddCodeJam(builder.Configuration);
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
+var host = Host.CreateDefaultBuilder()
+    .ConfigureServices((context, services) =>
+    {
+        services.AddOptions();
+        services.AddInfrastructure(context.Configuration);
+        services.AddCodeJam(context.Configuration);
+    }).Build();
 
 try
 {
-    var db = app.Services.GetRequiredService<SocialDbContext>();
+    var db = host.Services.GetRequiredService<SocialDbContext>();
     await Util.InitializeDb(db);
 }
 catch (Exception ex)
@@ -37,4 +19,4 @@ catch (Exception ex)
     Console.Error.WriteLine(ex);
 }
 
-app.Run();
+await host.RunAsync();

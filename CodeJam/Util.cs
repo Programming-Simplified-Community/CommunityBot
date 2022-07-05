@@ -27,10 +27,12 @@ public static class Util
                 Title = "Sound & Audio",
                 Description = "Find a creative way to integrate sound/audio into an application!",
                 Requirements = "Your repository must be public",
-                StartDateOn = DateTime.Now.AddDays(-3),
-                EndDateOn = DateTime.Now.AddDays(7),
-                RegistrationStartOn = DateTime.Now.AddDays(-30),
-                RegistrationEndOn = DateTime.Now.AddDays(-15)
+                
+                StartDateOn = new(2022, 7, 1, 0, 0, 0),
+                EndDateOn = new(2022, 7, 31, 23,59,59),
+                
+                RegistrationStartOn = new(2022,06,28,0,0,0),
+                RegistrationEndOn = new(2022, 07, 04, 23,59,59)
             };
             
             context.CodeJamTopics.Add(topic);
@@ -68,7 +70,7 @@ public static class Util
             await context.SaveChangesAsync();
         }
 
-
+        #if DEBUG
         if (!context.Users.Any())
         {
             var badgerId = Guid.NewGuid().ToString();
@@ -97,12 +99,13 @@ public static class Util
                 TopicId = topicId,
                 DiscordUserId = "117744034247737353",
                 DiscordGuildId = "989689420695367690",
-                ConfirmationValue = true,
-                ConfirmedOn = DateTime.Now.AddDays(-1)
+                //ConfirmationValue = true,
+                //ConfirmedOn = DateTime.Now.AddDays(-1)
             });
-
             await context.SaveChangesAsync();
         }
+        #endif
+
     }
     
     static Color GetColor(MessageType type)
