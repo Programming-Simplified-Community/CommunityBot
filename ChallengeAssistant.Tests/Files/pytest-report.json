@@ -1,0 +1,223 @@
+{
+  "created": 1657073913.054746,
+  "duration": 0.08799505233764648,
+  "exitcode": 1,
+  "root": "C:\\Users\\jonbr\\PycharmProjects\\PythonSimplifiedTestsRepo",
+  "environment": {
+    "Python": "3.10.5",
+    "Platform": "Windows-10-10.0.22000-SP0",
+    "Packages": {
+      "pytest": "7.1.2",
+      "py": "1.11.0",
+      "pluggy": "1.0.0"
+    },
+    "Plugins": {
+      "json-report": "1.5.0",
+      "metadata": "2.0.1"
+    }
+  },
+  "summary": {
+    "passed": 3,
+    "failed": 2,
+    "total": 5,
+    "collected": 5
+  },
+  "collectors": [
+    {
+      "nodeid": "",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests/oop-class-str.py",
+          "type": "Module"
+        }
+      ]
+    },
+    {
+      "nodeid": "tests/oop-class-str.py",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests/oop-class-str.py::test_constructor[John-Smith-18-expected0]",
+          "type": "Function",
+          "lineno": 9
+        },
+        {
+          "nodeid": "tests/oop-class-str.py::test_constructor[Adam-Thompson--20-expected1]",
+          "type": "Function",
+          "lineno": 9
+        },
+        {
+          "nodeid": "tests/oop-class-str.py::test_str[John-Smith-18-expected0]",
+          "type": "Function",
+          "lineno": 24
+        },
+        {
+          "nodeid": "tests/oop-class-str.py::test_str[Adam-Thompson--20-expected1]",
+          "type": "Function",
+          "lineno": 24
+        },
+        {
+          "nodeid": "tests/oop-class-str.py::test_prop",
+          "type": "Function",
+          "lineno": 36
+        }
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "nodeid": "tests/oop-class-str.py::test_constructor[John-Smith-18-expected0]",
+      "lineno": 9,
+      "outcome": "passed",
+      "keywords": [
+        "test_constructor[John-Smith-18-expected0]",
+        "parametrize",
+        "pytestmark",
+        "John-Smith-18-expected0",
+        "oop-class-str.py",
+        "tests/__init__.py",
+        "PythonSimplifiedTestsRepo"
+      ],
+      "setup": {
+        "duration": 0.0009634000016376376,
+        "outcome": "passed"
+      },
+      "call": {
+        "duration": 0.00016219998360611498,
+        "outcome": "passed"
+      },
+      "teardown": {
+        "duration": 0.00019270001212134957,
+        "outcome": "passed"
+      }
+    },
+    {
+      "nodeid": "tests/oop-class-str.py::test_constructor[Adam-Thompson--20-expected1]",
+      "lineno": 9,
+      "outcome": "failed",
+      "keywords": [
+        "test_constructor[Adam-Thompson--20-expected1]",
+        "parametrize",
+        "pytestmark",
+        "Adam-Thompson--20-expected1",
+        "oop-class-str.py",
+        "tests/__init__.py",
+        "PythonSimplifiedTestsRepo"
+      ],
+      "setup": {
+        "duration": 0.0004527999844867736,
+        "outcome": "passed"
+      },
+      "call": {
+        "duration": 0.0002941999991890043,
+        "outcome": "failed",
+        "crash": {
+          "path": "C:\\Users\\jonbr\\PycharmProjects\\PythonSimplifiedTestsRepo\\tests\\oop-class-str.py",
+          "lineno": 18,
+          "message": "assert -20 == 20\n +  where -20 = <main.Person object at 0x0000024E9F600130>.age"
+        },
+        "traceback": [
+          {
+            "path": "tests\\oop-class-str.py",
+            "lineno": 18,
+            "message": "AssertionError"
+          }
+        ],
+        "longrepr": "test_first = 'Adam', test_last = 'Thompson', test_age = -20, expected = {'age': 20, 'first': 'Adam', 'last': 'Thompson'}\n\n    @pytest.mark.parametrize(\"test_first,test_last,test_age,expected\",\n                             [(\"John\", \"Smith\", 18, {\"first\": \"John\", \"last\": \"Smith\", \"age\": 18}),\n                              (\"Adam\", \"Thompson\", -20, {\"first\": \"Adam\", \"last\": \"Thompson\", \"age\": 20})])\n    def test_constructor(test_first, test_last, test_age, expected):\n        person = Person(test_first, test_last, test_age)\n    \n        # assert fullname\n        assert person.name == expected[\"first\"] + \" \" + expected[\"last\"]\n>       assert person.age == expected[\"age\"]\nE       assert -20 == 20\nE        +  where -20 = <main.Person object at 0x0000024E9F600130>.age\n\ntests\\oop-class-str.py:18: AssertionError"
+      },
+      "teardown": {
+        "duration": 0.0002756000030785799,
+        "outcome": "passed"
+      }
+    },
+    {
+      "nodeid": "tests/oop-class-str.py::test_str[John-Smith-18-expected0]",
+      "lineno": 24,
+      "outcome": "passed",
+      "keywords": [
+        "test_str[John-Smith-18-expected0]",
+        "parametrize",
+        "pytestmark",
+        "John-Smith-18-expected0",
+        "oop-class-str.py",
+        "tests/__init__.py",
+        "PythonSimplifiedTestsRepo"
+      ],
+      "setup": {
+        "duration": 0.00035930000012740493,
+        "outcome": "passed"
+      },
+      "call": {
+        "duration": 0.00014600000577047467,
+        "outcome": "passed"
+      },
+      "teardown": {
+        "duration": 0.00019439999596215785,
+        "outcome": "passed"
+      }
+    },
+    {
+      "nodeid": "tests/oop-class-str.py::test_str[Adam-Thompson--20-expected1]",
+      "lineno": 24,
+      "outcome": "failed",
+      "keywords": [
+        "test_str[Adam-Thompson--20-expected1]",
+        "parametrize",
+        "pytestmark",
+        "Adam-Thompson--20-expected1",
+        "oop-class-str.py",
+        "tests/__init__.py",
+        "PythonSimplifiedTestsRepo"
+      ],
+      "setup": {
+        "duration": 0.0005012000037822872,
+        "outcome": "passed"
+      },
+      "call": {
+        "duration": 0.01845910001429729,
+        "outcome": "failed",
+        "crash": {
+          "path": "C:\\Users\\jonbr\\PycharmProjects\\PythonSimplifiedTestsRepo\\tests\\oop-class-str.py",
+          "lineno": 34,
+          "message": "AssertionError: assert 'First: Adam\\...son\\nAge: -20' == 'First: Adam\\...pson\\nAge: 20'\n    First: Adam\n    Last: Thompson\n  - Age: 20\n  + Age: -20\n  ?      +"
+        },
+        "traceback": [
+          {
+            "path": "tests\\oop-class-str.py",
+            "lineno": 34,
+            "message": "AssertionError"
+          }
+        ],
+        "longrepr": "test_first = 'Adam', test_last = 'Thompson', test_age = -20, expected = {'age': 20, 'first': 'Adam', 'last': 'Thompson'}\n\n    @pytest.mark.parametrize(\"test_first,test_last,test_age,expected\",\n                             [(\"John\", \"Smith\", 18, {\"first\": \"John\", \"last\": \"Smith\", \"age\": 18}),\n                              (\"Adam\", \"Thompson\", -20, {\"first\": \"Adam\", \"last\": \"Thompson\", \"age\": 20})])\n    def test_str(test_first, test_last, test_age, expected):\n        person = Person(test_first, test_last, test_age)\n    \n        message = f\"First: {expected['first']}\\n\" \\\n                  f\"Last: {expected['last']}\\n\" \\\n                  f\"Age: {expected['age']}\"\n>       assert str(person) == message\nE       AssertionError: assert 'First: Adam\\...son\\nAge: -20' == 'First: Adam\\...pson\\nAge: 20'\nE           First: Adam\nE           Last: Thompson\nE         - Age: 20\nE         + Age: -20\nE         ?      +\n\ntests\\oop-class-str.py:34: AssertionError"
+      },
+      "teardown": {
+        "duration": 0.0004783000040333718,
+        "outcome": "passed"
+      }
+    },
+    {
+      "nodeid": "tests/oop-class-str.py::test_prop",
+      "lineno": 36,
+      "outcome": "passed",
+      "keywords": [
+        "test_prop",
+        "oop-class-str.py",
+        "tests/__init__.py",
+        "PythonSimplifiedTestsRepo"
+      ],
+      "setup": {
+        "duration": 0.0002631999959703535,
+        "outcome": "passed"
+      },
+      "call": {
+        "duration": 0.0002108000044245273,
+        "outcome": "passed"
+      },
+      "teardown": {
+        "duration": 0.00014329998521134257,
+        "outcome": "passed"
+      }
+    }
+  ]
+}

@@ -27,6 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\ChallengeAssistant\ChallengeAssistant.csproj" />
       <ProjectReference Include="..\CodeJam\CodeJam.csproj" />
       <ProjectReference Include="..\Core\Core.csproj" />
       <ProjectReference Include="..\Data\Data.csproj" />

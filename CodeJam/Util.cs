@@ -29,10 +29,10 @@ public static class Util
                 Requirements = "Your repository must be public",
                 
                 StartDateOn = new(2022, 7, 1, 0, 0, 0),
-                EndDateOn = new(2022, 7, 31, 23,59,59),
+                EndDateOn = new(2022, 8, 15, 23,59,59),
                 
                 RegistrationStartOn = new(2022,06,28,0,0,0),
-                RegistrationEndOn = new(2022, 07, 04, 23,59,59)
+                RegistrationEndOn = new(2022, 07, 15, 23,59,59)
             };
             
             context.CodeJamTopics.Add(topic);

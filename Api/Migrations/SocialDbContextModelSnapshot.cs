@@ -19,6 +19,146 @@ namespace Api.Migrations
                 .HasAnnotation("ProductVersion", "6.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("Data.Challenges.ProgrammingChallenge", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Tip")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ProgrammingChallenges");
+                });
+
+            modelBuilder.Entity("Data.Challenges.ProgrammingChallengeReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProgrammingChallengeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProgrammingChallengeId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ChallengeReports");
+                });
+
+            modelBuilder.Entity("Data.Challenges.ProgrammingChallengeSubmission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("DiscordChannelId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("DiscordGuildId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("ProgrammingChallengeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SubmittedOn")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UserSubmission")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProgrammingChallengeId");
+
+                    b.ToTable("ProgrammingChallengeSubmissions");
+                });
+
+            modelBuilder.Entity("Data.Challenges.ProgrammingTest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("DockerEntryPoint")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ExecutableFileMountDestination")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Language")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProgrammingChallengeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TestDockerImage")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProgrammingChallengeId");
+
+                    b.ToTable("ProgrammingTests");
+                });
+
+            modelBuilder.Entity("Data.Challenges.ProgrammingTestResult", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("ProgrammingChallengeReportId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Result")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProgrammingChallengeReportId");
+
+                    b.ToTable("TestResults");
+                });
+
             modelBuilder.Entity("Data.CodeJam.PointType", b =>
                 {
                     b.Property<int>("Id")
@@ -445,6 +585,54 @@ namespace Api.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Data.Challenges.ProgrammingChallengeReport", b =>
+                {
+                    b.HasOne("Data.Challenges.ProgrammingChallenge", "ProgrammingChallenge")
+                        .WithMany()
+                        .HasForeignKey("ProgrammingChallengeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Data.SocialUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProgrammingChallenge");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Data.Challenges.ProgrammingChallengeSubmission", b =>
+                {
+                    b.HasOne("Data.Challenges.ProgrammingChallenge", "ProgrammingChallenge")
+                        .WithMany()
+                        .HasForeignKey("ProgrammingChallengeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProgrammingChallenge");
+                });
+
+            modelBuilder.Entity("Data.Challenges.ProgrammingTest", b =>
+                {
+                    b.HasOne("Data.Challenges.ProgrammingChallenge", null)
+                        .WithMany("Tests")
+                        .HasForeignKey("ProgrammingChallengeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Data.Challenges.ProgrammingTestResult", b =>
+                {
+                    b.HasOne("Data.Challenges.ProgrammingChallengeReport", null)
+                        .WithMany("TestResults")
+                        .HasForeignKey("ProgrammingChallengeReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Data.CodeJam.TeamMember", b =>
                 {
                     b.HasOne("Data.CodeJam.Team", null)
@@ -503,6 +691,16 @@ namespace Api.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Data.Challenges.ProgrammingChallenge", b =>
+                {
+                    b.Navigation("Tests");
+                });
+
+            modelBuilder.Entity("Data.Challenges.ProgrammingChallengeReport", b =>
+                {
+                    b.Navigation("TestResults");
                 });
 
             modelBuilder.Entity("Data.CodeJam.Team", b =>

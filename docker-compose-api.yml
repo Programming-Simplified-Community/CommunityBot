@@ -14,3 +14,4 @@ services:
         volumes:
             - $Env:APPDATA\microsoft\UserSecrets\:/root/.microsoft/usersecrets
             - $Env:USERPROFILE\.aspnet\https:/root/.aspnet/https/
+            - "/var/run/docker.sock:/var/run/docker.sock:Z"

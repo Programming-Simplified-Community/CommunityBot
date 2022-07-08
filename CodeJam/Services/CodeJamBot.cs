@@ -1,4 +1,5 @@
-﻿using CodeJam.Events;
+﻿using ChallengeAssistant.Services;
+using CodeJam.Events;
 using CodeJam.Interfaces;
 using Data.CodeJam;
 using Discord;
@@ -230,8 +231,9 @@ public class CodeJamBot : BackgroundService, IDiscordService
         try
         {
             await _commands.AddModulesAsync(typeof(Settings).Assembly, Provider);
+            await _commands.AddModulesAsync(typeof(ICodeRunner).Assembly, Provider);
+            
             await _commands.RegisterCommandsToGuildAsync(_guildId);
-
             _client.InteractionCreated += async interaction =>
             {
                 var scope = Provider.CreateScope();
