@@ -3,6 +3,9 @@ using Data.CodeJam;
 
 namespace CodeJam.Requests;
 
+/// <summary>
+/// A user attempting to register for a particular topic
+/// </summary>
 public class RegistrationRequest
 {
     [Required] public string GuildId { get; set; }

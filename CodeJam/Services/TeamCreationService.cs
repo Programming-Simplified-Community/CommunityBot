@@ -23,6 +23,11 @@ public class TeamCreationService : ITeamCreationService
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Retrieve registered users by their timezones
+    /// </summary>
+    /// <param name="topicId"></param>
+    /// <returns></returns>
     public async Task<Dictionary<Timezone, List<UserRegistrationRecord>>> GetRegisteredUsersByTimezone(int topicId)
     {
         var results = await (from registration in _context.CodeJamRegistrations
@@ -39,6 +44,12 @@ public class TeamCreationService : ITeamCreationService
             .ToDictionary(x => timezones[x.Key], x => x.ToList());
     }
 
+    /// <summary>
+    /// Helper method for generating an abbreviated name
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="length"></param>
+    /// <returns></returns>
     string GetAbbreviationFor(string text, int length)
     {
         text = text.Replace("&", string.Empty);
@@ -50,6 +61,13 @@ public class TeamCreationService : ITeamCreationService
         return text[..length];
     }
     
+    /// <summary>
+    /// Calculate teams for a given topic and timezone based on the users in said area
+    /// </summary>
+    /// <param name="topic"></param>
+    /// <param name="timezone"></param>
+    /// <param name="userPool"></param>
+    /// <returns></returns>
     public async Task<bool> CalculateTeamsFor(Topic topic, Timezone timezone, List<UserRegistrationRecord> userPool)
     {
         var topicAbbreviation =
@@ -132,7 +150,12 @@ public class TeamCreationService : ITeamCreationService
         
         return true;
     }
-
+    
+    /// <summary>
+    /// How many teams should there be based on <paramref name="memberCount"/>
+    /// </summary>
+    /// <param name="memberCount"></param>
+    /// <returns></returns>
     private static int NumOfTeams(int memberCount)
     {
         var half = (int)Math.Ceiling((double)memberCount / 2);

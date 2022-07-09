@@ -22,14 +22,14 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("generate", "create interactable challenges")]
     public async Task GenerateInChannel()
     {
-        await RespondAsync(text: "Processing...", ephemeral: true);
+        await RespondAsync(text: "Processing...", ephemeral: true); // This can take a bit so respond to the user to let them know things are popping
         
         foreach (var message in await Context.Channel.GetMessagesAsync().FlattenAsync())
         {
             await Context.Channel.DeleteMessageAsync(message);
             await Task.Delay(TimeSpan.FromSeconds(2));
         }
-
+        
         var challenges = (await _service.GetAll())
             .OrderBy(x=>x.Title);
 
@@ -40,6 +40,7 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
                 .WithDescription(challenge.Question)
                 .WithColor(Color.Teal);
                 
+            // The button shall be used to create a modal linked to a specific challenge.
             var comp = new ComponentBuilder()
                 .WithButton(new ButtonBuilder()
                     .WithLabel("Attempt")
@@ -49,7 +50,7 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
             await Context.Channel.SendMessageAsync(embed: e.Build(), components: comp.Build());
             await Task.Delay(TimeSpan.FromSeconds(2));
         }
-
+        
         await ModifyOriginalResponseAsync(x =>
         {
             x.Content = "Complete";
@@ -121,7 +122,7 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
     }
     
     [SlashCommand("view", "view available challenges")]
-    public async Task ViewChallenges([Autocomplete] string title)
+    public async Task ViewChallenges([Autocomplete(typeof(ProgrammingChallengeAutoCompleteProvider))] string title)
     {
         var item = await _service.FindChallenge(title);
 

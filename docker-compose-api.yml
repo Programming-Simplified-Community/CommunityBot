@@ -1,17 +1,13 @@
 version: "3.8"
 
 services:
-    api:
-        container_name: social-coder-api
-        image: social-coder-api
-        hostname: social-coder-api
-        ports:
-            - "5000:80"
-            - "5001:443"
+    api-v2:
+        container_name: social-coder-apiv2
+        image: social-code-apiv2
+        hostname: social-coder-api-v2
         environment:
-            - ASPNETCORE_URLS="https://+;http://+"
-            - ASPNETCORE_ENVIRONMENT=Development
+            - ReportPath=/socialcoder/Data/Reports
         volumes:
-            - $Env:APPDATA\microsoft\UserSecrets\:/root/.microsoft/usersecrets
-            - $Env:USERPROFILE\.aspnet\https:/root/.aspnet/https/
+            - ./appsettings.json:/app/appsettings.json
+            - /socialcoder/Data:/app/Data:rw
             - "/var/run/docker.sock:/var/run/docker.sock:Z"

@@ -14,9 +14,19 @@ public class ProgrammingChallengeSubmission
     /// </summary>
     public DateTime SubmittedOn { get; set; } = DateTime.UtcNow;
 
+    /// <summary>
+    /// Guild in which this submission came from
+    /// </summary>
     public string DiscordGuildId { get; set; } = default!;
+    
+    /// <summary>
+    /// Channel in which this submission came from
+    /// </summary>
     public string DiscordChannelId { get; set; } = default!;
 
+    /// <summary>
+    /// Foreign key to <see cref="ProgrammingChallenge"/>
+    /// </summary>
     public int ProgrammingChallengeId { get; set; }
     public ProgrammingChallenge ProgrammingChallenge { get; set; }
 

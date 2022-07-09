@@ -22,6 +22,7 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
     private readonly IServiceProvider _serviceProvider;
     private readonly SocialDbContext _context;
     private readonly DiscordSocketClient _client;
+    private readonly IConfiguration _config;
 
     private readonly int _maxConcurrentRunners;
     private ConcurrentDictionary<string, Task> _runners;
@@ -34,6 +35,7 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
         SocialDbContext context, 
         IConfiguration config, DiscordSocketClient client)
     {
+        _config = config;
         _serviceProvider = serviceProvider;
         _context = context;
         _client = client;
@@ -59,7 +61,8 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
             switch (item.Test.Language)
             {
                 case ProgrammingLanguage.Python:
-                    dockerTest = new PythonDockerTest(_serviceProvider.GetRequiredService<ILogger<PythonDockerTest>>());
+                    dockerTest = new PythonDockerTest(_serviceProvider.GetRequiredService<ILogger<PythonDockerTest>>(), 
+                        _config);
                     break;
 
                 default:
@@ -72,6 +75,7 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
             {
                 var passing = results.TestResults.Count(x => x.Result == TestStatus.Pass);
                 var total = results.TestResults.Count;
+                var allPassing = passing == total;
 
                 results.Points = passing;
                 
@@ -103,8 +107,7 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
                     _logger.LogError("Could not locate user {user}", item.Submission.UserId);
                     throw new Exception("Unable to locate user");
                 }
-                
-                var allPassing = results.TestResults.All(x => x.Result == TestStatus.Fail);
+
                 var embedColor = allPassing ? Color.Green : Color.Red;
 
                 var sb = new StringBuilder();

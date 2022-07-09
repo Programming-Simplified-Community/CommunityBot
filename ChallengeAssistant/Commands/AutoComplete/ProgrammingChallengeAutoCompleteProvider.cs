@@ -7,10 +7,18 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ChallengeAssistant.Commands.AutoComplete;
 
+/// <summary>
+/// Provide users a list of available challenges
+/// </summary>
 public class ProgrammingChallengeAutoCompleteProvider : AutocompleteHandler
 {
     protected static SocialDbContext Database;
 
+    /// <summary>
+    /// Search through <see cref="ProgrammingChallenge"/>'s via their Title value
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
     protected IQueryable<ProgrammingChallenge> Search(string? text)
     {
         if (string.IsNullOrEmpty(text))

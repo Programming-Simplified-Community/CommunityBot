@@ -8,6 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CodeJam.Commands.Autocomplete;
 
+/// <summary>
+/// Provide a user with a list of jams that they have not yet confirmed (and are still accepting registrations)
+/// </summary>
 public class ConfirmJamAutoCompleteProvider : AutocompleteHandler
 {
     protected static SocialDbContext Database;

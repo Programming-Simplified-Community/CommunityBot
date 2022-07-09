@@ -2,6 +2,9 @@
 
 namespace CodeJam.Commands.Autocomplete;
 
+/// <summary>
+/// A moderate shall be able to see all jams
+/// </summary>
 public class ModeratorJamTopicAutoCompleteProvider : RegisterableJamAutoCompleteProvider
 {
     protected override IQueryable<Topic> SearchTopics(string? text)

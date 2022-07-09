@@ -18,6 +18,12 @@ public class TopicService
         _context = context;
     }
 
+    /// <summary>
+    /// Validate and update registration date range for a particular topic
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public async Task<ResultOf<HttpStatusCode>> UpdateRegistrationDateRange(
         UpdateTopicRegistrationDateRangeRequest request, CancellationToken cancellationToken = default)
     {
@@ -38,6 +44,12 @@ public class TopicService
         return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);
     }
 
+    /// <summary>
+    /// Validate and update the submission date range for a particular topic
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public async Task<ResultOf<HttpStatusCode>> UpdateSubmissionDateRange(UpdateTopicSubmissionDateRangeRequest request,
         CancellationToken cancellationToken = default)
     {

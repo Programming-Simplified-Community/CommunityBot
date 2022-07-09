@@ -2,6 +2,9 @@
 
 namespace CodeJam.Requests;
 
+/// <summary>
+/// A user submitting their project 
+/// </summary>
 public class SubmissionRequest
 {
     [Required] public string GuildId { get; set; }

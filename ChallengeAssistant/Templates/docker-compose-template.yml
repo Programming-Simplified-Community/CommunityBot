@@ -1,0 +1,12 @@
+﻿version: "3.5"
+volumes:
+  unigrader_submission_data:
+    external: true
+
+services:
+  submission:
+    image: %IMAGE%
+    container_name: %NAME%
+    hostname: %NAME%
+    volumes:
+      - socialcoderdata/reports:rw

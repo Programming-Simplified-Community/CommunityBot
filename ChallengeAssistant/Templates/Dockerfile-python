@@ -1,0 +1,8 @@
+﻿FROM %IMAGE%
+
+COPY %USER_FILE% %DESTINATION_FILE%
+
+# MAGIC NEEDED 
+RUN mkdir -p /reports
+RUN mkdir -p /app/Data/Reports
+RUN ln -s /app/Data/Reports /reports

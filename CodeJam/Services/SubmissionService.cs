@@ -16,13 +16,16 @@ public class SubmissionService
     private readonly SocialDbContext _context;
     private readonly HttpClient _web = new();
 
-
     public SubmissionService(ILogger<SubmissionService> logger, SocialDbContext context)
     {
         _logger = logger;
         _context = context;
     }
 
+    /// <summary>
+    /// Get a list of submissions
+    /// </summary>
+    /// <returns></returns>
     public async Task<List<SubmissionViewItem>> GetSubmissions()
     {
         var topics = await _context.CodeJamTopics.ToDictionaryAsync(x => x.Id, x => x.Title);

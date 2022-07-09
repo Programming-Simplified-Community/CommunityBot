@@ -79,9 +79,6 @@ public class RegistrationCommands : InteractionModuleBase<SocketInteractionConte
         }
     }
 
-    [SlashCommand("why", "asdf")]
-    public async Task Why() => await RespondAsync("working", ephemeral: true);
-
     [SlashCommand("apply", "Apply to an active topic")]
     public async Task Register(
         [Autocomplete(typeof(RegisterableJamAutoCompleteProvider)),

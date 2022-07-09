@@ -14,7 +14,7 @@ public static class SeedDb
 Must have a constructor that accepts:
 1. first
 2. last
-3. age
+3. age -- should transform any negative age into a positive number. i.e -21 --> 21
 
 Must have the following attributes:
 1. 'first' - represents a person's first name
@@ -51,7 +51,7 @@ Lastly, must have the following method:
                 ProgrammingChallengeId = personClass.Id,
                 ExecutableFileMountDestination = "/app/main.py",
                 Language = ProgrammingLanguage.Python,
-                DockerEntryPoint = @"pytest --json-report --json-report-file /app/reports/report.json -v tests/oop-class-str.py"
+                DockerEntryPoint = @"pytest --json-report --json-report-file /app/Data/Reports/report.json -v tests/oop-class-str.py"
             };
 
             context.ProgrammingTests.Add(personTest);

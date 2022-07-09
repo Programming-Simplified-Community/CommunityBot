@@ -4,6 +4,12 @@ namespace ChallengeAssistant;
 
 public static class PS
 {
+    /// <summary>
+    /// Execute powershell script
+    /// </summary>
+    /// <param name="script"></param>
+    /// <param name="onProgress"></param>
+    /// <param name="onError"></param>
     public static async Task Execute(string script,
         Action<object?, DataAddingEventArgs>? onProgress = null,
         Action<object?, DataAddingEventArgs>? onError = null)

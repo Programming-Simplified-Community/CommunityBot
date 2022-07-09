@@ -2,6 +2,9 @@
 
 namespace CodeJam.Requests;
 
+/// <summary>
+/// User request to abandon a code jam
+/// </summary>
 public class AbandonRequest
 {
     [Required] public string GuildId { get; set; }

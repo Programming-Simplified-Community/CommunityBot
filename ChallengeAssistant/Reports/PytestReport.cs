@@ -1,10 +1,14 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-
+﻿
 namespace ChallengeAssistant.Reports;
 
+/// <summary>
+/// Outcome for a Pytest report
+/// </summary>
 public enum PytestOutcome { Failed, Passed }
 
+/// <summary>
+/// Strongly-typed version of a Pytest report in Python
+/// </summary>
 public class PytestReport
 {
     /// <summary>
@@ -17,6 +21,9 @@ public class PytestReport
     /// </summary>
     public PytestSummary Summary { get; set; }
     
+    /// <summary>
+    /// List of test cases that were ran for this specific test
+    /// </summary>
     public List<PytestItem> Tests { get; set; } = new();
 }
 

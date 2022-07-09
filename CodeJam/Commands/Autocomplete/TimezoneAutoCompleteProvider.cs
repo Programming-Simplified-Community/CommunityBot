@@ -8,6 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CodeJam.Commands.Autocomplete;
 
+/// <summary>
+/// Provide a user with a list of timezones that we support.
+/// </summary>
 public class TimezoneAutoCompleteProvider : AutocompleteHandler
 {
     private static SocialDbContext? _database;

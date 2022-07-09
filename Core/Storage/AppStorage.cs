@@ -4,7 +4,8 @@ public class AppStorage : IStorageHandler
 {
     public static string AppDataPath => Path.Join(AppDomain.CurrentDomain.BaseDirectory, "Data");
     public static string ToolsProfilePath => Path.Join(AppDataPath, "Profiles");
-    public static string ScriptsPath => Path.Join(AppDataPath, "Scripts");
+    public static string ScriptsPath => PathFromData("Scripts");
+    public static string ReportsPath => Path.Join(AppDataPath, "Reports");
     public static string ConfigsPath => Path.Join(AppDataPath, "Configs");
     public static string TemporaryFileStorage => Path.Join(AppDataPath, "Temp");
     public static string Snippets => Path.Join(AppDataPath, "Snippets");

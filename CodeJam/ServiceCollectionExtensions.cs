@@ -4,8 +4,6 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using MediatR;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace CodeJam;
 

@@ -10,7 +10,6 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Color = System.Drawing.Color;
 
 namespace ChallengeAssistant.Services;
 
@@ -33,6 +32,10 @@ public class ChallengeService
         _client.ModalSubmitted += ChallengeModalResponse;
     }
 
+    /// <summary>
+    /// Event fired on <see cref="M:DiscordSocketClient.ModalSubmitted"/>
+    /// </summary>
+    /// <param name="modal">Modal instance the user interacted with</param>
     private async Task ChallengeModalResponse(SocketModal modal)
     {
         try
@@ -40,13 +43,15 @@ public class ChallengeService
             var components = modal.Data.Components.ToList();
             var runner = _serviceProvider.GetRequiredService<ICodeRunner>();
             var challengeId = modal.Data.CustomId.ExtractDiscordModalChallengeId();
-
+            
+            // If the user does not already exist in our system we'll add them!
             var user = await _context.GetOrAddUser(modal.User.Username, modal.User.Id.ToString());
 
             var challenge = await _context.ProgrammingChallenges
                 .Include(x => x.Tests)
                 .FirstOrDefaultAsync(x => x.Id == challengeId);
-
+            
+            // Ensure the challenge is one we actually have in store
             if (challenge is null)
             {
                 _logger.LogError("Was unable to locate challenge with Id {Id} for user {Username}",
@@ -54,9 +59,10 @@ public class ChallengeService
                     modal.User.Username);
                 return;
             }
-
+            
+            // For now we only have 1 component in there, the code.
             var code = components.First(x => x.CustomId == "code").Value;
-
+            
             var submission = new ProgrammingChallengeSubmission
             {
                 UserSubmission = code,
@@ -68,7 +74,8 @@ public class ChallengeService
 
             _context.ProgrammingChallengeSubmissions.Add(submission);
             await _context.SaveChangesAsync();
-
+            
+            // Inform the user that their request is processing. Also letting them know how many others are waiting for their code to be tested
             var e = new EmbedBuilder()
                 .WithTitle("Processing Request")
                 .WithDescription($"There are: {runner.PendingSubmissions} submissions ahead of you.")
@@ -87,6 +94,13 @@ public class ChallengeService
         }
     }
     
+    /// <summary>
+    /// Processes a button request, aka when the user clicks on a challenge button
+    /// </summary>
+    /// <remarks>
+    ///  challenge_id
+    /// </remarks>
+    /// <param name="messageComponent"></param>
     private async Task ChallengeButtonResponse(SocketMessageComponent messageComponent)
     {
         var id = messageComponent.Data.CustomId.ExtractDiscordButtonChallengeId();
@@ -97,7 +111,7 @@ public class ChallengeService
             _logger.LogError("Unable to process button {ButtonId}'s response", messageComponent.Data.CustomId);
             return;
         }
-
+        
         var modal = new ModalBuilder()
             .WithTitle(challenge.Title)
             .WithCustomId(challenge.ToDiscordModalId())
@@ -114,6 +128,12 @@ public class ChallengeService
         });
     }
     
+    /// <summary>
+    /// Retrieve leaderboard stats for a specific challenge
+    /// </summary>
+    /// <param name="title">Title for challenge</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>List of leaderboard entries, if the challenge was valid. Otherwise, an empty list is returned</returns>
     public async Task<List<LeaderboardEntry>> ViewLeaderboardFor(string title,
         CancellationToken cancellationToken = default)
     {
@@ -133,6 +153,11 @@ public class ChallengeService
             .ToList();
     }
 
+    /// <summary>
+    /// Overall leaderboard
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns>List of the top contestants</returns>
     public async Task<List<LeaderboardEntry>> ViewLeaderboard(CancellationToken cancellationToken = default)
     {
         var query = await (from report in _context.ChallengeReports
@@ -143,19 +168,42 @@ public class ChallengeService
         return query.OrderByDescending(x => x.Report.Points).ToList();
     }
     
+    /// <summary>
+    /// Retrieve all programming challenges
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public async Task<List<ProgrammingChallenge>> GetAll(CancellationToken cancellationToken = default)
         => await _context.ProgrammingChallenges.ToListAsync(cancellationToken);
 
+    /// <summary>
+    /// Find a specific <see cref="ProgrammingChallenge"/> via <paramref name="id"/>
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public async Task<ProgrammingChallenge?> FindChallenge(int id, CancellationToken cancellationToken = default)
         => await _context.ProgrammingChallenges
             .Include(x=>x.Tests)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
+    /// <summary>
+    /// Find a specific <see cref="ProgrammingChallenge"/> via <paramref name="title"/>
+    /// </summary>
+    /// <param name="title"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public async Task<ProgrammingChallenge?> FindChallenge(string title, CancellationToken cancellationToken = default)
         => await _context.ProgrammingChallenges
             .Include(x=>x.Tests)
             .FirstOrDefaultAsync(x => x.Title == title, cancellationToken);
     
+    /// <summary>
+    /// Find a specific <see cref="ProgrammingChallenge"/> via <paramref name="language"/>
+    /// </summary>
+    /// <param name="language"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public async Task<List<ProgrammingChallenge>> FindChallengesWithLanguage(ProgrammingLanguage language,
         CancellationToken cancellationToken = default)
         => await _context.ProgrammingChallenges
@@ -163,6 +211,13 @@ public class ChallengeService
             .Where(x => x.Tests.Any(y => y.Language == language))
             .ToListAsync(cancellationToken);
 
+    /// <summary>
+    /// Retrieve submissions from user with <paramref name="discordUserId"/> for challenge with Id <paramref name="challengeId"/>
+    /// </summary>
+    /// <param name="discordUserId"></param>
+    /// <param name="challengeId"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public async Task<ResultOf<ProgrammingChallengeSubmission>> GetUserSubmissionFor(string discordUserId, int challengeId,
         CancellationToken cancellationToken = default)
     {
@@ -183,6 +238,11 @@ public class ChallengeService
             : ResultOf<ProgrammingChallengeSubmission>.Success(existing);
     }
 
+    /// <summary>
+    /// Submit user provided code 
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
     public async Task<ResultOf<HttpStatusCode>> Submit(SubmitProgrammingChallengeRequest request)
     {
         #region Validation

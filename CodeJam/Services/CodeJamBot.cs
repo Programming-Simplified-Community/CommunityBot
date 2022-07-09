@@ -248,7 +248,12 @@ public class CodeJamBot : BackgroundService, IDiscordService
             
         }
     }
-
+    
+    /// <summary>
+    /// Apparently, we need to download users for a certain use-case we have....
+    /// </summary>
+    /// <param name="guildId"></param>
+    /// <returns></returns>
     public async Task<bool> DownloadUsers(ulong guildId)
     {
         try

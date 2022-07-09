@@ -1,7 +1,7 @@
 ﻿using ChallengeAssistant.Reports;
-using ChallengeAssistant.Services;
 using Core.Storage;
 using Data.Challenges;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
@@ -9,7 +9,7 @@ namespace ChallengeAssistant.DockerTypes;
 
 public class PythonDockerTest : DockerTest
 {
-    public PythonDockerTest(ILogger<DockerTest> logger) : base(logger)
+    public PythonDockerTest(ILogger<DockerTest> logger, IConfiguration config) : base(logger, config)
     {
     }
 
@@ -27,14 +27,22 @@ public class PythonDockerTest : DockerTest
 
     protected override async Task<ProgrammingChallengeReport?> ParseReport()
     {
-        var files = Directory.GetFiles(ReportsDir);
+        var files = Directory.GetFiles(AppStorage.ReportsPath);
 
         if (!files.Any())
+        {
+            Logger.LogWarning("Could not locate any report files at {Path}", AppStorage.ReportsPath);
             return null;
+        }
+            
 
         var results = await ParsePytest(await File.ReadAllTextAsync(files.First()));
 
-        if (results is null) return null;
+        if (results is null)
+        {
+            Logger.LogWarning("Something went wrong while trying to parse the report file...\n\t{file}", files.First());
+            return null;
+        }
 
         var report = new ProgrammingChallengeReport
         {
@@ -52,6 +60,18 @@ public class PythonDockerTest : DockerTest
         }
 
         return report;
+    }
+
+    protected override async Task<string> CreateDockerFile(string userCodeFilePath)
+    {
+        Dictionary<string, string> vars = new()
+        {
+            ["IMAGE"] = Test.TestDockerImage,
+            ["USER_FILE"] = userCodeFilePath,
+            ["DESTINATION_FILE"] = Test.ExecutableFileMountDestination
+        };
+
+        return await Util.CreateDockerFileFromTemplate(Test.Language, vars);
     }
 
     protected override async Task Cleanup()
@@ -113,8 +133,9 @@ public class PythonDockerTest : DockerTest
 
             return Task.FromResult(report);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Console.Error.WriteLine(ex);
             return Task.FromResult<PytestReport?>(null);
         }
     }

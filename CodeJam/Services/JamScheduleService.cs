@@ -57,6 +57,9 @@ public class JamScheduleService : BackgroundService
         _config = config;
     }
 
+    /// <summary>
+    /// Checks for topics that should now be "starting"
+    /// </summary>
     private async Task CheckTopicsStarting()
     {
         var now = DateTime.Now;
@@ -121,6 +124,9 @@ public class JamScheduleService : BackgroundService
         }
     }
 
+    /// <summary>
+    /// Handle confirmation messages, send them to users who have not yet confirmed
+    /// </summary>
     private async Task HandleConfirmationMessages()
     {
         var now = DateTime.Now;

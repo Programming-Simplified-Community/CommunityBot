@@ -2,6 +2,9 @@
 
 namespace CodeJam.Requests;
 
+/// <summary>
+/// A user confirming their participation level for a topic
+/// </summary>
 public class ConfirmRegistrationRequest
 {
     [Required] public string GuildId { get; set; }

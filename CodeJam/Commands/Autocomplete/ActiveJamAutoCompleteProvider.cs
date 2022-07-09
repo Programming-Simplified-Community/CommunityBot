@@ -8,6 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CodeJam.Commands.Autocomplete;
 
+/// <summary>
+/// Provide a user with a list of active jams
+/// </summary>
 public class ActiveJamAutoCompleteProvider : AutocompleteHandler
 {
     private static SocialDbContext? Database { get; set; }

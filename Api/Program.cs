@@ -3,6 +3,13 @@ using Infrastructure;
 using ChallengeAssistant;
 
 var host = Host.CreateDefaultBuilder()
+    .ConfigureAppConfiguration(config =>
+    {
+        config.AddEnvironmentVariables();
+        #if DEBUG
+        config.AddUserSecrets<Program>();
+        #endif
+    })
     .ConfigureServices((context, services) =>
     {
         services.AddOptions();

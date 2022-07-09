@@ -21,6 +21,11 @@ public class RegistrationService
         _context = context;
     }
 
+    /// <summary>
+    /// View topics that are currently accepting registrations
+    /// </summary>
+    /// <param name="referenceTime"></param>
+    /// <returns></returns>
     public async Task<List<Topic>> ViewRegisterableTopics(DateTime? referenceTime = null)
     {
         referenceTime ??= DateTime.Now;
@@ -29,12 +34,23 @@ public class RegistrationService
             referenceTime >= x.RegistrationStartOn && referenceTime <= x.RegistrationEndOn && x.IsActive).ToListAsync();
     }
 
+    /// <summary>
+    /// Get registration records that have no yet been confirmed
+    /// </summary>
+    /// <param name="topicId"></param>
+    /// <returns></returns>
     public async Task<List<Registration>> GetRegistrationsWhoNeedConfirmation(int topicId)
     => await _context.CodeJamRegistrations
             .Where(x => x.TopicId == topicId &&
                         x.ConfirmedOn == null)
             .ToListAsync();
-
+    
+    /// <summary>
+    /// Process a registration request. We may also add a new user, if this user is not already in our system
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public async Task<ResultOf<HttpStatusCode>> Register(RegistrationRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -109,7 +125,6 @@ public class RegistrationService
             });
         }
         
-
         Registration item = new()
         {
             DiscordGuildId = request.GuildId,
@@ -126,6 +141,12 @@ public class RegistrationService
         return ResultOf<HttpStatusCode>.Success(HttpStatusCode.Created);
     }
 
+    /// <summary>
+    /// Confirm registration to a code jam
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public async Task<ResultOf<HttpStatusCode>> ConfirmRegistration(ConfirmRegistrationRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -180,6 +201,12 @@ public class RegistrationService
         return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);
     }
 
+    /// <summary>
+    /// Process a user's request to abandon a code jam
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public async Task<ResultOf<HttpStatusCode>> Abandon(AbandonRequest request,
         CancellationToken cancellationToken = default)
     {

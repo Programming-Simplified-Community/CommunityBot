@@ -3,6 +3,9 @@ using Discord.Interactions;
 
 namespace CodeJam.Commands.Autocomplete;
 
+/// <summary>
+/// Provide a user with a list of options, easy selection of experience levels
+/// </summary>
 public class ExperienceAutoCompleteProvider : AutocompleteHandler
 {
     private readonly string[] _options =

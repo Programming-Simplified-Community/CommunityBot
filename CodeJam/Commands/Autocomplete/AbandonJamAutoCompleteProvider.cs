@@ -4,10 +4,12 @@ using Discord;
 using Discord.Interactions;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace CodeJam.Commands.Autocomplete;
 
+/// <summary>
+/// Provide a user with a list of active jams (that they're in) in which they can abandon
+/// </summary>
 public class AbandonJamAutoCompleteProvider : AutocompleteHandler
 {
     protected static SocialDbContext Database;
