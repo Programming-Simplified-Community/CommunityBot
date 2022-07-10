@@ -139,6 +139,7 @@ public static class Util
             "yellow" => SigmaLevel.Yellow,
             "green" => SigmaLevel.Green,
             "blue" => SigmaLevel.Blue,
+            "red" => SigmaLevel.Red,
             "black" => SigmaLevel.Black,
             _ => SigmaLevel.White
         };

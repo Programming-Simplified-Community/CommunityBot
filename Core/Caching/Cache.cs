@@ -4,15 +4,25 @@ namespace Core.Caching;
 
 public class CacheItem<TKey, TSubKey, TValue, TSource>
 {
+    /// <summary>
+    /// Behaves like a 'Time to live' or 'TTL'. 
+    /// </summary>
     private readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(30);
+
     private Func<TSource, Task<Dictionary<TSubKey, TValue>>> _updateCacheMethod;
     private ConcurrentDictionary<TKey, Dictionary<TSubKey, TValue>> _cache = new();
+    
+    /// <summary>
+    /// When <see cref="DateTime.Now"/> >= this value -- invoke <see cref="_updateCacheMethod"/>
+    /// </summary>
     private DateTime _nextUpdate = DateTime.Now.AddSeconds(-30);
     
-    public CacheItem(Func<TSource, Task<Dictionary<TSubKey, TValue>>> updateMethod)
+    public CacheItem(Func<TSource, Task<Dictionary<TSubKey, TValue>>> updateMethod, TimeSpan? refreshInterval = null)
     {
-        
         _updateCacheMethod = updateMethod;
+
+        if (refreshInterval is not null)
+            _refreshInterval = refreshInterval.Value;
     }
 
     public bool ContainsKey(TKey key) => _cache.ContainsKey(key);

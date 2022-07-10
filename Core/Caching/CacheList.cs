@@ -7,9 +7,12 @@ public class CacheList<T>
     private DateTime _nextUpdate = DateTime.Now.AddSeconds(-30);
     private Func<Task<List<T>>> _refreshFunc;
 
-    public CacheList(Func<Task<List<T>>> refreshFunc)
+    public CacheList(Func<Task<List<T>>> refreshFunc, TimeSpan? refreshInterval = null)
     {
         _refreshFunc = refreshFunc;
+
+        if (refreshInterval is not null)
+            _refreshInterval = refreshInterval.Value;
     }
 
     private async Task<bool> Contains(T value)

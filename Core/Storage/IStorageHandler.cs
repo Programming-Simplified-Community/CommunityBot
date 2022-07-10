@@ -1,8 +1,15 @@
 ﻿namespace Core.Storage;
 
+
+/*
+ *  Was preparing for .NET 7.0 with static abstracts.
+ * However there were a few bugs with things when using .NET 7. 
+ * Keeping things how they are in here for now....
+ */
+
 public interface IStorageHandler
 {
-    static string AppDataPath => Path.Join(AppDomain.CurrentDomain.BaseDirectory, "Data");
+    static string AppDataPath  => Path.Join(AppDomain.CurrentDomain.BaseDirectory, "Data");
     static string ToolsProfilePath => Path.Join(AppDataPath, "Profiles");
     static string ScriptsPath => Path.Join(AppDataPath, "Scripts");
     static string ConfigsPath => Path.Join(AppDataPath, "Configs");
