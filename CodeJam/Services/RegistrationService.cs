@@ -247,27 +247,36 @@ public class RegistrationService
             request.DisplayName,
             request.GuildId,
             request.Topic);
-        
-        existing.Registration.AbandonedOn = DateTime.Now;
-        
-        // If this jam has a withdraw point type assigned, deduct the appropriate points
-        if (existing.Topic.PointType_WithdrawId is not null)
+
+        // IF we're within the registration period - this record will remain in the database
+        var now = DateTime.Now;
+        if (now >= existing.Topic.StartDateOn && now <= existing.Topic.EndDateOn)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.DiscordUserId == request.MemberId,
-                cancellationToken);
-
-            var point = await _context.CodeJamPointTypes.FirstOrDefaultAsync(
-                x => x.Id == existing.Topic.PointType_WithdrawId, cancellationToken);
-
-            if (user != null && point != null)
+            existing.Registration.AbandonedOn = DateTime.Now;
+        
+            // If this jam has a withdraw point type assigned, deduct the appropriate points
+            if (existing.Topic.PointType_WithdrawId is not null)
             {
-                user.Points += point.Amount;
-                _logger.LogWarning("{Username}: Deducting '{Points}' points for withdrawing",
-                    request.DisplayName,
-                    Math.Abs(point.Amount));
+                var user = await _context.Users.FirstOrDefaultAsync(x => x.DiscordUserId == request.MemberId,
+                    cancellationToken);
+
+                var point = await _context.CodeJamPointTypes.FirstOrDefaultAsync(
+                    x => x.Id == existing.Topic.PointType_WithdrawId, cancellationToken);
+
+                if (user != null && point != null)
+                {
+                    user.Points += point.Amount;
+                    _logger.LogWarning("{Username}: Deducting '{Points}' points for withdrawing",
+                        request.DisplayName,
+                        Math.Abs(point.Amount));
+                }
             }
         }
-
+        else // this record shall get deleted so a user may "re-enter"
+        {
+            _context.CodeJamRegistrations.Remove(existing.Registration);
+        }
+        
         await _context.SaveChangesAsync(cancellationToken);
         return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);
     }
