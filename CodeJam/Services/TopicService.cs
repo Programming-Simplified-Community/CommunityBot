@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using CodeJam.Requests;
 using Core.Validation;
+using Data.CodeJam;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,19 @@ public class TopicService
     {
         _logger = logger;
         _context = context;
+    }
+
+    /// <summary>
+    /// Retrieve all the topics that are currently available for users to register for
+    /// </summary>
+    /// <returns></returns>
+    public async Task<List<Topic>> GetRegisterableTopics()
+    {
+        var now = DateTime.Now;
+
+        return await _context.CodeJamTopics
+            .Where(x => now >= x.RegistrationStartOn && now <= x.RegistrationEndOn)
+            .ToListAsync();
     }
 
     /// <summary>

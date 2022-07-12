@@ -44,7 +44,7 @@ public class JamScheduleService : BackgroundService
     /// </summary>
     private readonly string _daysLeftMessageFormat = "Greetings, {0}! This is a friendly reminder that you signed up to participate in a {1} CodeJam! " +
                                                      "Every applicant **must** confirm their participation by using the `/registration confirm` command on our server! " +
-                                                     "You have until {2} to do so, otherwise you will **not** be participating!";
+                                                     "You have {2} days to do so, otherwise you will **not** be participating!";
 
     private Dictionary<int, Timezone> _timezones = new();
 
@@ -155,10 +155,23 @@ public class JamScheduleService : BackgroundService
                 var daysLeft = (int)Math.Abs((now - reg.Topic.RegistrationEndOn).TotalDays);
                 var hoursLeft = (int)Math.Abs((now - reg.Topic.RegistrationEndOn).TotalHours);
                 
+                if (reg.Registration.ReminderSentOn.HasValue)
+                {
+                    var today = DateOnly.FromDateTime(DateTime.Today);
+                    var compare = DateOnly.FromDateTime(reg.Registration.ReminderSentOn.Value);
+
+                    if (today == compare)
+                        continue;
+                }
+                
                 if (daysLeft is > 1 and <= 2)
                     await SendDayMessage(reg.Topic, reg.Registration, reg.User, daysLeft);
                 else if (hoursLeft is > 2 and < 24)
                     await SendHourMessage(reg.Topic, reg.Registration, reg.User, hoursLeft);
+                
+                // update the registration value
+                reg.Registration.ReminderSentOn = DateTime.Now;
+                await _context.SaveChangesAsync();
             }
         }
         catch (Exception ex)

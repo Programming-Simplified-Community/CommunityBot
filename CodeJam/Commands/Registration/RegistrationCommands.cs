@@ -119,10 +119,10 @@ public class RegistrationCommands : InteractionModuleBase<SocketInteractionConte
                 await RespondAsync(embed:
                     Util.Embed("Registration",
                             $"You've successfully registered for {category}!\n" +
-                            "Please note, just before the jam starts you will be asked to confirm" +
+                            "Please note, just before the jam starts you will be asked to confirm " +
                             "your decision to participate. If you `do not` confirm you `will not` be included. This is to" +
                             "help reduce the amount of team shuffling.\n\n" +
-                            "If you leave in the middle of the jam -- points will be deduced from your user profile. People who are prone" +
+                            "If you leave in the middle of the jam -- points will be deduced from your user profile. People who are prone " +
                             "to abandoning code-jams will end up getting grouped with together in later jams.",
                             MessageType.Success)
                         .WithFooter(response.StatusCode.ToString()).Build(), ephemeral: true);

@@ -20,6 +20,10 @@ public class CodeJamBot : BackgroundService, IDiscordService
     private readonly IConfiguration _config;
     private readonly InteractionService _commands;
     private readonly SocialDbContext _context;
+    private readonly TopicService _topicService;
+    private readonly ulong _welcomeChannelId;
+    private IRole? _cachedCodeJamRole;
+    private ITextChannel? _cachedCodeJamGeneralTextChannel;
     
     public CodeJamBot(IConfiguration config, 
         ILogger<CodeJamBot> logger, 
@@ -27,18 +31,163 @@ public class CodeJamBot : BackgroundService, IDiscordService
         IHostApplicationLifetime applicationLifetime,
         IOptions<Settings> settings,
         DiscordSocketClient client,
-        InteractionService commands, SocialDbContext context)
+        InteractionService commands, SocialDbContext context, 
+        TopicService topicService)
     {
         _config = config;
         _logger = logger;
         _client = client;
         _commands = commands;
         _context = context;
+        _topicService = topicService;
         _settings = settings.Value;
         _guildId = config.GetValue<ulong>("CodeJamBot:PrimaryGuild");
+        _welcomeChannelId = config.GetValue<ulong>("CodeJamBot:WelcomeChannelId");
+
         Provider = serviceProvider.CreateScope().ServiceProvider;
+
         _client.Log += LogAsync;
         _client.Ready += ReadyAsync;
+        _client.UserJoined += ClientOnUserJoined;
+        _client.ButtonExecuted += ClientOnButtonExecuted;
+    }
+
+    private async Task ClientOnButtonExecuted(SocketMessageComponent arg)
+    {
+        if (string.IsNullOrEmpty(arg.Data.CustomId))
+            return;
+
+        try
+        {
+            var parts = arg.Data.CustomId.Split('_');
+
+            var wantsToJoin = parts.First().ToLower() == "cjj";
+
+            // Make sure this is the original user who is responding... not some other user
+            if (parts[^1] != arg.User.Id.ToString())
+            {
+                await arg.RespondAsync(embed: Util
+                    .Embed("Oops", "This is not your message to interact with!", MessageType.Warning)
+                    .Build(), ephemeral: true);
+                _logger.LogWarning("{Username} attempted to interact with user id's message {id}",
+                    arg.User.Username, parts[^1]);
+                return;
+            }
+
+            // Clean up the message because it's not desired
+            if (!wantsToJoin)
+            {
+                await arg.Message.DeleteAsync();
+                await arg.RespondAsync(
+                    embed: Util.Embed("No worries!", "Please introduce yourself to the community!", MessageType.Info)
+                        .Build(),
+                    ephemeral: true);
+                return;
+            }
+
+            if (_cachedCodeJamRole is null)
+                _cachedCodeJamRole = _client.GetGuild(_guildId)
+                    .GetRole(_config.GetValue<ulong>("CodeJamBot:CodeJamRoleId"));
+
+            if (_cachedCodeJamRole is null)
+            {
+                _logger.LogError("Was unable to locate {RoleName} - unable to add it to{Username}",
+                    _config["CodeJamBot:CodeJamRoleName"],
+                    arg.User.Username);
+                await arg.RespondAsync(embed: Util.Embed("Error", "An error occurred while processing your request",
+                    MessageType.Error).Build(),
+                    ephemeral: true);
+                return;
+            }
+
+            var guildUser = _client.GetGuild(_guildId).GetUser(arg.User.Id);
+            await guildUser.AddRoleAsync(_cachedCodeJamRole);
+
+            _logger.LogInformation("Added {Username} to {RoleName}", arg.User.Username, _cachedCodeJamRole.Name);
+            
+            // Apparently the local cache is only built after calling stuff like this? -- interesting
+            if(_cachedCodeJamGeneralTextChannel is null)
+                _cachedCodeJamGeneralTextChannel =_client.GetGuild(_guildId)
+                    .GetTextChannel(_config.GetValue<ulong>("CodeJamBot:CodeJamGeneralId"));
+
+            if (_cachedCodeJamGeneralTextChannel is null)
+            {
+                _logger.LogWarning("Was unable to locate {ChannelName} for {Username}", "cj-general", arg.User.Username);
+                await arg.RespondAsync(embed: Util.Embed("Error", "An error occurred while processing your request",
+                    MessageType.Error).Build(),
+                    ephemeral: true);
+                return;
+            }
+
+            await _cachedCodeJamGeneralTextChannel.SendMessageAsync(
+                $"Hey, {arg.User.Mention}! This is where you can use the slash command `/registration apply`!");
+
+            await arg.Message.DeleteAsync();
+            await arg.RespondAsync($"Welcome! Please head over to {_cachedCodeJamGeneralTextChannel.Mention}!", ephemeral: true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Was unable to process user request for button {CustomId}, for user {Username}\nError: {Error}",
+                arg.Data.CustomId,
+                arg.User.Username,
+                ex);
+        }
+    }
+
+     private async Task CreateWelcomeMessage(string username, string mention, string id)
+    {
+        // Need to ensure we have our welcome channel readily available.
+        var welcomeChannel = _client.GetGuild(_guildId).GetChannel(_welcomeChannelId);
+        
+        if (welcomeChannel is null)
+        {
+            _logger.LogWarning(
+                "Was unable to welcome {Username} to the server. Unable to locate welcome channel with Id: {Id}",
+                username,
+                _welcomeChannelId);
+            return;
+        }
+        
+        // We have to limit ourselves on how many components we show due to discord limits. 
+        var registerableTopics = await _topicService.GetRegisterableTopics();
+
+        // If there are no topics to register for we'll skip this entire thing
+        if(!registerableTopics.Any())
+            return;
+        
+        var message =
+            $"Greetings, {mention}! If you're here to participate in one of the following code-jams:\n" +
+            "```yml\n" +
+            $"{string.Join("\n", registerableTopics.Select(x=>x.Title))}\n" +
+            "```\n" +
+            "Join our code-jam channel by clicking the join button below!";
+        
+        var compBuilder = new ComponentBuilder()
+            .WithButton(new ButtonBuilder()
+                .WithCustomId($"cjj_{id}")
+                .WithStyle(ButtonStyle.Primary)
+                .WithLabel("Join"))
+            .WithButton(new ButtonBuilder()
+                .WithCustomId($"cji_{id}")
+                .WithLabel("No Thanks")
+                .WithStyle(ButtonStyle.Danger));
+        
+        var textChannel = welcomeChannel as SocketTextChannel;
+        
+        await textChannel!.SendMessageAsync(embed: new EmbedBuilder()
+                .WithTitle("Welcome")
+                .WithDescription(message)
+                .WithColor(Color.Blue)
+                .Build(),
+            components: compBuilder.Build());
+
+        _logger.LogInformation("Welcomed {Username} to the server", username);
+    }
+
+    private async Task ClientOnUserJoined(SocketGuildUser arg)
+    {
+        await Task.Delay(TimeSpan.FromSeconds(30));
+        await CreateWelcomeMessage(arg.Username, arg.Mention, arg.Id.ToString());
     }
 
     private bool _isReady;
@@ -245,7 +394,7 @@ public class CodeJamBot : BackgroundService, IDiscordService
         }
         catch (Exception ex)
         {
-            
+            _logger.LogError("An error occurred while initializing bot: {Error}", ex);
         }
     }
     
