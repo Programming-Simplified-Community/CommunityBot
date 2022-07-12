@@ -186,6 +186,7 @@ public class CodeJamBot : BackgroundService, IDiscordService
 
     private async Task ClientOnUserJoined(SocketGuildUser arg)
     {
+        await Task.Delay(TimeSpan.FromSeconds(30));
         await CreateWelcomeMessage(arg.Username, arg.Mention, arg.Id.ToString());
     }
 
