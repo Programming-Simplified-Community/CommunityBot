@@ -17,6 +17,44 @@ public enum MessageType
 
 public static class Util
 {
+    /// <summary>
+    /// Convert the <paramref name="topic"/>'s Id into a repeatable format for
+    /// discord component Ids
+    /// </summary>
+    /// <param name="topic"></param>
+    /// <returns></returns>
+    public static string ToTopicId(this Topic topic)
+        => $"topic_{topic.Id}";
+
+    /// <summary>
+    /// Extract the <see cref="Topic"/> Id from <paramref name="id"/> that was associated with
+    /// the registration modal
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public static int ExtractRegisterTopicId(this string id)
+    {
+        if (!id.StartsWith("register"))
+            return -1;
+
+        int.TryParse(id[9..], out var topicId);
+        return topicId;
+    }
+    
+    /// <summary>
+    /// Attempt to extract the <see cref="Topic"/> Id from <paramref name="id"/>
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns>Topic Id if found, otherwise -1</returns>
+    public static int ExtractTopicId(this string id)
+    {
+        if (!id.StartsWith("topic"))
+            return -1;
+
+        int.TryParse(id[6..], out var topicId);
+        return topicId;
+    }
+    
     public static async Task InitializeDb(SocialDbContext context)
     {
         if (!context.CodeJamTopics.Any())
@@ -28,11 +66,11 @@ public static class Util
                 Description = "Find a creative way to integrate sound/audio into an application!",
                 Requirements = "Your repository must be public",
                 
-                StartDateOn = new(2022, 7, 1, 0, 0, 0),
+                StartDateOn = new(2022, 7, 15, 0, 0, 0),
                 EndDateOn = new(2022, 8, 15, 23,59,59),
                 
                 RegistrationStartOn = new(2022,06,28,0,0,0),
-                RegistrationEndOn = new(2022, 07, 15, 23,59,59)
+                RegistrationEndOn = new(2022, 07, 14, 23,59,59)
             };
             
             context.CodeJamTopics.Add(topic);

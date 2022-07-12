@@ -20,12 +20,19 @@ public static class Util
 
     public static int ExtractDiscordModalChallengeId(this string id)
     {
+        // If this does not start with 'challenge' it's invalid
+        if (!id.StartsWith("modal"))
+            return -1;
+        
         int.TryParse(id[6..], out var challengeId);
         return challengeId;
     }
     
     public static int ExtractDiscordButtonChallengeId(this string id)
     {
+        if (id.StartsWith("challenge"))
+            return -1;
+        
         int.TryParse(id[10..], out var challengeId);
         return challengeId;
     }

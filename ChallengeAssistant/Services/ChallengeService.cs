@@ -43,6 +43,9 @@ public class ChallengeService
             var components = modal.Data.Components.ToList();
             var runner = _serviceProvider.GetRequiredService<ICodeRunner>();
             var challengeId = modal.Data.CustomId.ExtractDiscordModalChallengeId();
+
+            if (challengeId < 0)
+                return;
             
             // If the user does not already exist in our system we'll add them!
             var user = await _context.GetOrAddUser(modal.User.Username, modal.User.Id.ToString());
@@ -104,6 +107,10 @@ public class ChallengeService
     private async Task ChallengeButtonResponse(SocketMessageComponent messageComponent)
     {
         var id = messageComponent.Data.CustomId.ExtractDiscordButtonChallengeId();
+
+        if (id < 0)
+            return;
+        
         var challenge = await _context.ProgrammingChallenges.FirstOrDefaultAsync(x => x.Id == id);
 
         if (challenge is null)
