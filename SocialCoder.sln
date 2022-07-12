@@ -54,6 +54,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChallengeAssistant", "Chall
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChallengeAssistant.Tests", "ChallengeAssistant.Tests\ChallengeAssistant.Tests.csproj", "{DC13BA59-3895-4EBD-AAB3-1A1B6FA34C76}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordHub", "DiscordHub\DiscordHub.csproj", "{EE930698-0A4A-45AE-970E-74DB90B0A4AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,6 +106,10 @@ Global
 		{DC13BA59-3895-4EBD-AAB3-1A1B6FA34C76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC13BA59-3895-4EBD-AAB3-1A1B6FA34C76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC13BA59-3895-4EBD-AAB3-1A1B6FA34C76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE930698-0A4A-45AE-970E-74DB90B0A4AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE930698-0A4A-45AE-970E-74DB90B0A4AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE930698-0A4A-45AE-970E-74DB90B0A4AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE930698-0A4A-45AE-970E-74DB90B0A4AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -127,6 +133,7 @@ Global
 		{D28842D1-3DCB-4D69-BABF-E40BD094FA1E} = {54DACC41-52DB-4327-BDE8-4F13EA2FEC40}
 		{CA01C13D-23DD-4FE4-B4C2-A853EA33B6E3} = {BA413663-3D6E-45CF-B85A-B1B6E9D46FEB}
 		{DC13BA59-3895-4EBD-AAB3-1A1B6FA34C76} = {D28842D1-3DCB-4D69-BABF-E40BD094FA1E}
+		{EE930698-0A4A-45AE-970E-74DB90B0A4AD} = {9E380D9A-2E74-4307-8EAC-C81158C72EC4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C4735933-C3B0-4B09-8DEB-8571553E260E}

@@ -1,4 +1,6 @@
 ﻿using ChallengeAssistant.Services;
+using ChallengeAssistant.Services.InteractionHandlers;
+using DiscordHub;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +12,8 @@ public static class ServiceCollectionExtensions
     {
         return services.AddSingleton<ChallengeService>()
                 .AddSingleton<ICodeRunner, CodeRunnerService>()
-                .AddHostedService(x => x.GetRequiredService<ICodeRunner>());
+                .AddHostedService(x => x.GetRequiredService<ICodeRunner>())
+                .AddSingleton<IDiscordButtonHandler, AttemptChallengeButtonInteractionHandler>()
+                .AddSingleton<IDiscordModalHandler, SubmitChallengeModalInteractionHandler>();
     }
 }

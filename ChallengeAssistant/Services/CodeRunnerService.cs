@@ -108,11 +108,20 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
                     throw new Exception("Unable to locate user");
                 }
 
-                var embedColor = allPassing ? Color.Green : Color.Red;
+                var embedColor = Color.Red;
+
+                if (allPassing && total > 0)
+                    embedColor = Color.Green;
+                else if (total == 0)
+                    embedColor = Color.Magenta;
 
                 var sb = new StringBuilder();
-                if (allPassing)
+                if (allPassing && total > 0)
                     sb.AppendLine($"Good job, {user.DiscordDisplayName}! All tests passed!");
+                else if (total == 0)
+                {
+                    sb.AppendLine("Appears no tests were executed. Please make sure you provided valid syntax!");
+                }
                 else
                 {
                     var block = "```yml\n";
