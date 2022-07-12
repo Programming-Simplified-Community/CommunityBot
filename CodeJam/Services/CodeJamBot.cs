@@ -160,7 +160,7 @@ public class CodeJamBot : BackgroundService, IDiscordService
             "```yml\n" +
             $"{string.Join("\n", registerableTopics.Select(x=>x.Title))}\n" +
             "```\n" +
-            "Please click the join button below!";
+            "Join our code-jam channel by clicking the join button below!";
         
         var compBuilder = new ComponentBuilder()
             .WithButton(new ButtonBuilder()
