@@ -10,6 +10,12 @@ var host = Host.CreateDefaultBuilder()
         config.AddUserSecrets<Program>();
         #endif
     })
+    .ConfigureLogging((context, logging) =>
+    {
+        var config = context.Configuration.GetSection("Logging");
+        logging.AddConfiguration(config);
+        logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+    })
     .ConfigureServices((context, services) =>
     {
         services.AddOptions();
