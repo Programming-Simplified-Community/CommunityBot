@@ -1,6 +1,7 @@
 using CodeJam;
 using Infrastructure;
 using ChallengeAssistant;
+using DiscordHub;
 
 var host = Host.CreateDefaultBuilder()
     .ConfigureAppConfiguration(config =>
@@ -22,6 +23,7 @@ var host = Host.CreateDefaultBuilder()
         services.AddInfrastructure(context.Configuration);
         services.AddCodeJam(context.Configuration);
         services.AddCodeRunner(context.Configuration);
+        services.AddDiscordInteractionHub();
     }).Build();
 
 try
@@ -29,6 +31,15 @@ try
     var db = host.Services.GetRequiredService<SocialDbContext>();
     await CodeJam.Util.InitializeDb(db);
     await SeedDb.Seed(db);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine(ex);
+}
+
+try
+{
+    var hub = host.Services.GetRequiredService<InteractionHub>();
 }
 catch (Exception ex)
 {

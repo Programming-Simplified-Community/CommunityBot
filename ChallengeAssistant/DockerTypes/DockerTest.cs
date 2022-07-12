@@ -190,27 +190,20 @@ public abstract class DockerTest
                 Logger.LogError("Was unable to start container for {Test}", Test.TestDockerImage);
                 return null;
             }
-            
-            var attachResponse = await DockerClient.Containers.AttachContainerAsync(ContainerResponse.ID, false, new()
-            {
-                Stderr = true,
-                Stdout = true,
-                Stream = true
-            });
 
             CancellationTokenSource cts = new(); // This token is for stopping container
             await GetContainerStats(cts);
             
             // Display the logs from the container
-            var (stdout, stderr) = await attachResponse.ReadOutputToEndAsync(default);
             var endTime = DateTime.UtcNow;
             Logger.LogWarning("Time took: {Time}", $"{(endTime-startTime):g}");
-            
-            if (!string.IsNullOrEmpty(stderr))
-                Logger.LogError(stderr);
 
-            if (!string.IsNullOrEmpty(stdout))
-                Logger.LogInformation(stdout);
+            await DockerClient.Containers.RemoveContainerAsync(ContainerResponse.ID, new()
+            {
+                Force = true
+            });
+
+            await PS.Execute($"docker rmi -f {_imageId}");
             
             // time to parse the JSON file which should be in the reports directory
             return await ParseReport();

@@ -10,6 +10,7 @@
     <ItemGroup>
       <ProjectReference Include="..\ChallengeAssistant\ChallengeAssistant.csproj" />
       <ProjectReference Include="..\Data\Data.csproj" />
+      <ProjectReference Include="..\DiscordHub\DiscordHub.csproj" />
       <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
     </ItemGroup>
 

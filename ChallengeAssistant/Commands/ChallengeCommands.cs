@@ -2,6 +2,7 @@
 using ChallengeAssistant.Services;
 using Discord;
 using Discord.Interactions;
+using DiscordHub;
 using Microsoft.Extensions.Logging;
 
 namespace ChallengeAssistant.Commands;
@@ -44,7 +45,7 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
             var comp = new ComponentBuilder()
                 .WithButton(new ButtonBuilder()
                     .WithLabel("Attempt")
-                    .WithCustomId($"challenge_{challenge.Id}")
+                    .WithCustomId(string.Format(Constants.ATTEMPT_BUTTON_NAME_FORMAT, challenge.Id))
                     .WithStyle(ButtonStyle.Success));
 
             await Context.Channel.SendMessageAsync(embed: e.Build(), components: comp.Build());

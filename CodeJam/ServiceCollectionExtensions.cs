@@ -1,8 +1,10 @@
 ﻿using CodeJam.Interfaces;
 using CodeJam.Services;
+using CodeJam.Services.InteractionHandlers;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using DiscordHub;
 using MediatR;
 
 namespace CodeJam;
@@ -12,6 +14,8 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddCodeJam(this IServiceCollection services, IConfiguration configuration)
     {
         return services
+            .AddSingleton<IDiscordButtonHandler, JoinCodeJamButtonInteractionHandler>()
+            .AddSingleton<IDiscordButtonHandler, NoThanksCodeJamButtonInteractionHandler>()
             .AddSingleton<RegistrationService>()
             .AddSingleton<SubmissionService>()
             .AddSingleton<TeamCreationService>()

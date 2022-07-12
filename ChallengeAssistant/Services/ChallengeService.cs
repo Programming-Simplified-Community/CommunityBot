@@ -1,14 +1,10 @@
 ﻿using System.Net;
-using ChallengeAssistant.Models;
 using ChallengeAssistant.Requests;
 using Core.Validation;
 using Data;
 using Data.Challenges;
-using Discord;
-using Discord.WebSocket;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace ChallengeAssistant.Services;
@@ -18,121 +14,11 @@ public class ChallengeService
 {
     private readonly ILogger<ChallengeService> _logger;
     private readonly SocialDbContext _context;
-    private readonly DiscordSocketClient _client;
-    private readonly IServiceProvider _serviceProvider;
     
-    public ChallengeService(ILogger<ChallengeService> logger, SocialDbContext context, DiscordSocketClient client, IServiceProvider serviceProvider)
+    public ChallengeService(ILogger<ChallengeService> logger, SocialDbContext context)
     {
         _logger = logger;
         _context = context;
-        _client = client;
-        _serviceProvider = serviceProvider;
-
-        _client.ButtonExecuted += ChallengeButtonResponse;
-        _client.ModalSubmitted += ChallengeModalResponse;
-    }
-
-    /// <summary>
-    /// Event fired on <see cref="M:DiscordSocketClient.ModalSubmitted"/>
-    /// </summary>
-    /// <param name="modal">Modal instance the user interacted with</param>
-    private async Task ChallengeModalResponse(SocketModal modal)
-    {
-        try
-        {
-            var components = modal.Data.Components.ToList();
-            var runner = _serviceProvider.GetRequiredService<ICodeRunner>();
-            var challengeId = modal.Data.CustomId.ExtractDiscordModalChallengeId();
-
-            if (challengeId < 0)
-                return;
-            
-            // If the user does not already exist in our system we'll add them!
-            var user = await _context.GetOrAddUser(modal.User.Username, modal.User.Id.ToString());
-
-            var challenge = await _context.ProgrammingChallenges
-                .Include(x => x.Tests)
-                .FirstOrDefaultAsync(x => x.Id == challengeId);
-            
-            // Ensure the challenge is one we actually have in store
-            if (challenge is null)
-            {
-                _logger.LogError("Was unable to locate challenge with Id {Id} for user {Username}",
-                    challengeId,
-                    modal.User.Username);
-                return;
-            }
-            
-            // For now we only have 1 component in there, the code.
-            var code = components.First(x => x.CustomId == "code").Value;
-            
-            var submission = new ProgrammingChallengeSubmission
-            {
-                UserSubmission = code,
-                ProgrammingChallengeId = challengeId,
-                DiscordGuildId = modal.GuildId?.ToString() ?? string.Empty,
-                DiscordChannelId = modal.ChannelId?.ToString() ?? string.Empty,
-                UserId = user.Id
-            };
-
-            _context.ProgrammingChallengeSubmissions.Add(submission);
-            await _context.SaveChangesAsync();
-            
-            // Inform the user that their request is processing. Also letting them know how many others are waiting for their code to be tested
-            var e = new EmbedBuilder()
-                .WithTitle("Processing Request")
-                .WithDescription($"There are: {runner.PendingSubmissions} submissions ahead of you.")
-                .WithColor(Discord.Color.Purple)
-                .WithFooter("Please be patient");
-            
-            await modal.RespondAsync(embed: e.Build(), ephemeral: true);
-            
-            UserSubmissionQueueItem item = new(challenge.Tests.First(), submission, code);
-            await runner.Enqueue(item);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("Error occurred while processing Modal: {Exception}", ex);
-            await modal.RespondAsync(ephemeral: true, text: "Error occurred while processing...");
-        }
-    }
-    
-    /// <summary>
-    /// Processes a button request, aka when the user clicks on a challenge button
-    /// </summary>
-    /// <remarks>
-    ///  challenge_id
-    /// </remarks>
-    /// <param name="messageComponent"></param>
-    private async Task ChallengeButtonResponse(SocketMessageComponent messageComponent)
-    {
-        var id = messageComponent.Data.CustomId.ExtractDiscordButtonChallengeId();
-
-        if (id < 0)
-            return;
-        
-        var challenge = await _context.ProgrammingChallenges.FirstOrDefaultAsync(x => x.Id == id);
-
-        if (challenge is null)
-        {
-            _logger.LogError("Unable to process button {ButtonId}'s response", messageComponent.Data.CustomId);
-            return;
-        }
-        
-        var modal = new ModalBuilder()
-            .WithTitle(challenge.Title)
-            .WithCustomId(challenge.ToDiscordModalId())
-            .AddTextInput(new TextInputBuilder()
-                .WithCustomId("code")
-                .WithLabel("Code")
-                .WithRequired(true)
-                .WithStyle(TextInputStyle.Paragraph));
-
-        await messageComponent.RespondWithModalAsync(modal.Build(), new()
-        {
-            RetryMode = RetryMode.AlwaysRetry,
-            AuditLogReason = $"{messageComponent.User.Username} - attempted to solve {challenge.Title}"
-        });
     }
     
     /// <summary>

@@ -12,31 +12,6 @@ public static class Util
     /// </summary>
     internal static Regex LastSegmentOfUrlRegex = new("[^/]+(?=/$|$)");
 
-    public static string ToDiscordChallengeId(this ProgrammingChallenge challenge)
-        => $"challenge_{challenge.Id}";
-
-    public static string ToDiscordModalId(this ProgrammingChallenge challenge)
-        => $"modal_{challenge.Id}";
-
-    public static int ExtractDiscordModalChallengeId(this string id)
-    {
-        // If this does not start with 'challenge' it's invalid
-        if (!id.StartsWith("modal"))
-            return -1;
-        
-        int.TryParse(id[6..], out var challengeId);
-        return challengeId;
-    }
-    
-    public static int ExtractDiscordButtonChallengeId(this string id)
-    {
-        if (id.StartsWith("challenge"))
-            return -1;
-        
-        int.TryParse(id[10..], out var challengeId);
-        return challengeId;
-    }
-
     public static void EnsureDir(string dirPath)
     {
         if (!Directory.Exists(dirPath))
