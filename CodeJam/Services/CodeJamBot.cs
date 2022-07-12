@@ -22,6 +22,8 @@ public class CodeJamBot : BackgroundService, IDiscordService
     private readonly SocialDbContext _context;
     private readonly TopicService _topicService;
     private readonly ulong _welcomeChannelId;
+    private IRole? _cachedCodeJamRole;
+    private ITextChannel? _cachedCodeJamGeneralTextChannel;
     
     public CodeJamBot(IConfiguration config, 
         ILogger<CodeJamBot> logger, 
@@ -47,164 +49,92 @@ public class CodeJamBot : BackgroundService, IDiscordService
         _client.Log += LogAsync;
         _client.Ready += ReadyAsync;
         _client.UserJoined += ClientOnUserJoined;
-        _client.ModalSubmitted += ClientOnModalSubmitted;
         _client.ButtonExecuted += ClientOnButtonExecuted;
     }
 
     private async Task ClientOnButtonExecuted(SocketMessageComponent arg)
     {
-        var topicId = arg.Data.CustomId.ExtractTopicId();
-
-        if (topicId < 0)
-            return;
-
-        var topic = await _context.CodeJamTopics.FirstOrDefaultAsync(x => x.Id == topicId);
-
-        if (topic is null)
+        if (string.IsNullOrEmpty(arg.Data.CustomId))
             return;
 
         try
         {
-            var modalBuilder = new ModalBuilder()
-                .WithTitle(topic.Title)
-                .WithCustomId($"register_{topicId}");
+            var parts = arg.Data.CustomId.Split('_');
 
-            var rowBuilder = new ActionRowBuilder()
-                .WithSelectMenu(
-                    new SelectMenuBuilder()
-                        .WithCustomId("experience")
-                        .AddOption("White Belt (0-1 years)", "white", isDefault: true)
-                        .AddOption("Yellow Belt (2-3 years)", "yellow")
-                        .AddOption("Green Belt (4-5 years)", "green")
-                        .AddOption("Blue Belt (6-7 years)", "blue")
-                        .AddOption("Red Belt (8-9 years)", "red")
-                        .AddOption("Black Belt (10+ years)", "black"));
+            var wantsToJoin = parts.First().ToLower() == "cjj";
 
-            var timezones = await _context.CodeJamTimezones
-                .OrderBy(x => x.Name)
-                .ToListAsync();
+            // Make sure this is the original user who is responding... not some other user
+            if (parts[^1] != arg.User.Id.ToString())
+            {
+                await arg.RespondAsync(embed: Util
+                    .Embed("Oops", "This is not your message to interact with!", MessageType.Warning)
+                    .Build(), ephemeral: true);
+                _logger.LogWarning("{Username} attempted to interact with user id's message {id}",
+                    arg.User.Username, parts[^1]);
+                return;
+            }
 
-            // Timezone option
-            var timezoneMenu = new SelectMenuBuilder()
-                .WithCustomId("timezone");
-            foreach (var timezone in timezones)
-                timezoneMenu.AddOption(timezone.Name, timezone.Name);
+            // Clean up the message because it's not desired
+            if (!wantsToJoin)
+            {
+                await arg.Message.DeleteAsync();
+                await arg.RespondAsync(
+                    embed: Util.Embed("No worries!", "Please introduce yourself to the community!", MessageType.Info)
+                        .Build(),
+                    ephemeral: true);
+                return;
+            }
 
-            rowBuilder.WithSelectMenu(timezoneMenu);
-            rowBuilder.WithSelectMenu(new SelectMenuBuilder()
-                .WithCustomId("preferTeam")
-                .AddOption("Yes", "yes", isDefault: true)
-                .AddOption("No", "no"));
+            if (_cachedCodeJamRole is null)
+                _cachedCodeJamRole = _client.GetGuild(_guildId)
+                    .GetRole(_config.GetValue<ulong>("CodeJamBot:CodeJamRoleId"));
 
-            var modalComponentBuilder = new ModalComponentBuilder();
-            modalComponentBuilder.ActionRows.Add(rowBuilder);
+            if (_cachedCodeJamRole is null)
+            {
+                _logger.LogError("Was unable to locate {RoleName} - unable to add it to{Username}",
+                    _config["CodeJamBot:CodeJamRoleName"],
+                    arg.User.Username);
+                await arg.RespondAsync(embed: Util.Embed("Error", "An error occurred while processing your request",
+                    MessageType.Error).Build(),
+                    ephemeral: true);
+                return;
+            }
 
-            await arg.RespondWithModalAsync(modalBuilder.Build());
+            var guildUser = _client.GetGuild(_guildId).GetUser(arg.User.Id);
+            await guildUser.AddRoleAsync(_cachedCodeJamRole);
+
+            _logger.LogInformation("Added {Username} to {RoleName}", arg.User.Username, _cachedCodeJamRole.Name);
+            
+            // Apparently the local cache is only built after calling stuff like this? -- interesting
+            if(_cachedCodeJamGeneralTextChannel is null)
+                _cachedCodeJamGeneralTextChannel =_client.GetGuild(_guildId)
+                    .GetTextChannel(_config.GetValue<ulong>("CodeJamBot:CodeJamGeneralId"));
+
+            if (_cachedCodeJamGeneralTextChannel is null)
+            {
+                _logger.LogWarning("Was unable to locate {ChannelName} for {Username}", "cj-general", arg.User.Username);
+                await arg.RespondAsync(embed: Util.Embed("Error", "An error occurred while processing your request",
+                    MessageType.Error).Build(),
+                    ephemeral: true);
+                return;
+            }
+
+            await _cachedCodeJamGeneralTextChannel.SendMessageAsync(
+                $"Hey, {arg.User.Mention}! This is where you can use the slash command `/registration apply`!");
+
+            await arg.Message.DeleteAsync();
+            await arg.RespondAsync($"Welcome! Please head over to {_cachedCodeJamGeneralTextChannel.Mention}!", ephemeral: true);
         }
         catch (Exception ex)
         {
-            _logger.LogError("Was unable to process button interaction for topic {Topic}.\nError:\t{Error}",
-                topic.Title,
+            _logger.LogError("Was unable to process user request for button {CustomId}, for user {Username}\nError: {Error}",
+                arg.Data.CustomId,
+                arg.User.Username,
                 ex);
         }
     }
 
-    private async Task ClientOnModalSubmitted(SocketModal arg)
-    {
-        await arg.RespondAsync("Processing request", ephemeral: true);
-        
-        var topicId = arg.Data.CustomId.ExtractRegisterTopicId();
-
-        if (topicId < 0)
-        {
-            await arg.ModifyOriginalResponseAsync(x =>
-            {
-                x.Content = "";
-                x.Embed = Util.Embed("Error", "Was unable to process request", MessageType.Error)
-                    .WithFooter("Invalid topic")
-                    .Build();
-            });
-            return;
-        }
-
-        var topic = await _context.CodeJamTopics.FirstOrDefaultAsync(x => x.Id == topicId);
-
-        if (topic is null)
-        {
-            _logger.LogWarning("Was unable to locate topic with Id {TopicId} so {Username} could register",
-                topicId,
-                arg.User.Username);
-
-            await arg.ModifyOriginalResponseAsync(x =>
-            {
-                x.Content = "";
-                x.Embed = Util.Embed("Error", "Was unable to process request", MessageType.Error)
-                    .WithFooter("Unable to locate topic")
-                    .Build();
-            });
-            
-            return;
-        }
-
-        var user = await _context.GetOrAddUser(arg.User.Username, arg.User.Id.ToString());
-        var timezones = await _context.CodeJamTimezones.ToDictionaryAsync(x => x.Name, x => x);
-        
-        var components = arg.Data.Components.ToList();
-
-        var experienceLevel = Util.GetExperienceLevel(components.First(x => x.CustomId.Equals("experience")).Value);
-        var timezoneName = components.First(x => x.CustomId.Equals("timezone")).Value;
-        var isSolo = components.First(x => x.CustomId.Equals("preferTeam")).Value == "no";
-        
-        Timezone selectedTimezone;
-        if (timezones.ContainsKey(timezoneName))
-            selectedTimezone = timezones[timezoneName];
-        else
-        {
-            _logger.LogWarning("Was unable to register {Username} for {topic}, invalid timezone {timezone}",
-                arg.User.Username,
-                topic.Title,
-                timezoneName);
-
-            await arg.ModifyOriginalResponseAsync(x =>
-            {
-                x.Content = "";
-                x.Embed = Util.Embed("Error", "Was unable to process request", MessageType.Error)
-                    .WithFooter("Invalid timezone")
-                    .Build();
-            });
-            
-            return;
-        }
-        
-        var registration = new Registration
-        {
-            DiscordUserId = arg.User.Id.ToString(),
-            ExperienceLevel = experienceLevel,
-            IsSolo = isSolo,
-            TimezoneId = selectedTimezone.Id,
-            TopicId = topicId,
-            DiscordGuildId = arg.GuildId.ToString()!
-        };
-
-        _context.CodeJamRegistrations.Add(registration);
-        await _context.SaveChangesAsync();
-        
-        _logger.LogInformation("{Username} successfully registered for {Topic}, has {Experience} and in {Timezone}",
-            user.UserName,
-            topic.Title,
-            experienceLevel,
-            timezoneName);
-        
-        // Let user know things have completed processing
-        await arg.ModifyOriginalResponseAsync(x =>
-        {
-            x.Content = "";
-            x.Embed = Util.Embed("Registration", "Your are now registered!", MessageType.Success)
-                .Build();
-        });
-    }
-
-    private async Task ClientOnUserJoined(SocketGuildUser arg)
+     private async Task CreateWelcomeMessage(string username, string mention, string id)
     {
         // Need to ensure we have our welcome channel readily available.
         var welcomeChannel = _client.GetGuild(_guildId).GetChannel(_welcomeChannelId);
@@ -213,44 +143,35 @@ public class CodeJamBot : BackgroundService, IDiscordService
         {
             _logger.LogWarning(
                 "Was unable to welcome {Username} to the server. Unable to locate welcome channel with Id: {Id}",
-                arg.Username,
+                username,
                 _welcomeChannelId);
             return;
         }
         
         // We have to limit ourselves on how many components we show due to discord limits. 
-        var registerableTopics = (await _topicService.GetRegisterableTopics()).Take(24).ToList();
+        var registerableTopics = await _topicService.GetRegisterableTopics();
 
         // If there are no topics to register for we'll skip this entire thing
-        if (!registerableTopics.Any())
+        if(!registerableTopics.Any())
             return;
         
-        var compBuilder = new ComponentBuilder();
-
-        var styleIndex = 0;
-        foreach (var topic in registerableTopics)
-        {
-            compBuilder.WithButton(new ButtonBuilder()
-                .WithLabel(topic.Title)
-                .WithCustomId(topic.ToTopicId())
-                .WithStyle(styleIndex switch
-                {
-                    0 => ButtonStyle.Danger,
-                    1 => ButtonStyle.Link,
-                    2 => ButtonStyle.Primary,
-                    3 => ButtonStyle.Secondary,
-                    4 => ButtonStyle.Success
-                }));
-            
-            styleIndex++;
-            if (styleIndex > 4)
-                styleIndex = 0;
-        }
-
         var message =
-            $"Greetings, {arg.Mention}! If you're here for the code-jam here are the following jams accepting applicants! " +
-            "Please click on the button associated to the topic you wish to join! Or ignore if you're not interested.";
-
+            $"Greetings, {mention}! If you're here to participate in one of the following code-jams:\n" +
+            "```yml\n" +
+            $"{string.Join("\n", registerableTopics.Select(x=>x.Title))}\n" +
+            "```\n" +
+            "Please click the join button below!";
+        
+        var compBuilder = new ComponentBuilder()
+            .WithButton(new ButtonBuilder()
+                .WithCustomId($"cjj_{id}")
+                .WithStyle(ButtonStyle.Primary)
+                .WithLabel("Join"))
+            .WithButton(new ButtonBuilder()
+                .WithCustomId($"cji_{id}")
+                .WithLabel("No Thanks")
+                .WithStyle(ButtonStyle.Danger));
+        
         var textChannel = welcomeChannel as SocketTextChannel;
         
         await textChannel!.SendMessageAsync(embed: new EmbedBuilder()
@@ -260,7 +181,12 @@ public class CodeJamBot : BackgroundService, IDiscordService
                 .Build(),
             components: compBuilder.Build());
 
-        _logger.LogInformation("Welcomed {Username} to the server", arg.Username);
+        _logger.LogInformation("Welcomed {Username} to the server", username);
+    }
+
+    private async Task ClientOnUserJoined(SocketGuildUser arg)
+    {
+        await CreateWelcomeMessage(arg.Username, arg.Mention, arg.Id.ToString());
     }
 
     private bool _isReady;
