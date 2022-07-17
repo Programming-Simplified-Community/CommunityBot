@@ -53,8 +53,8 @@ public class ChallengeService
                     x.Sum(y => y.Duration))
             )
             .OrderByDescending(x => x.Points)
-            .ThenByDescending(x=>x.Attempts)
-            .ThenByDescending(x=>x.Duration)
+            .ThenBy(x=>x.Attempts)
+            .ThenBy(x=>x.Duration)
             .ToList();
     }
     
