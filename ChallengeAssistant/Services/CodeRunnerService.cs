@@ -86,8 +86,15 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
                 {
                     existingReport.Points = passing;
                     _context.TestResults.RemoveRange(existingReport.TestResults);
+                    var testResults = results.TestResults;
                     _context.TestResults.AddRange(results.TestResults);
                     results = existingReport;
+                    
+                    testResults.ForEach(x =>
+                    {
+                        x.ProgrammingChallengeReportId = existingReport.Id;
+                        results.TestResults.Add(x);
+                    });
                 }
                 else
                 {
