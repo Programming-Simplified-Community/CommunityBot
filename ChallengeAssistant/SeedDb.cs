@@ -1,15 +1,12 @@
 ﻿using Data.Challenges;
 using Infrastructure;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChallengeAssistant;
 
 public static class SeedDb
 {
-    public static async Task Seed(SocialDbContext context)
-    {
-        if (!context.ProgrammingChallenges.Any())
-        {
-            var question = @"This scenario tries to validate some of your OOP skills. You must create a class called `Person` with the following requirements.
+    private const string scenario_one = @"This scenario tries to validate some of your OOP skills. You must create a class called `Person` with the following requirements.
 ```md
 Must have a constructor that accepts:
 1. first
@@ -33,8 +30,14 @@ Age: PersonsAgeGoesHere
 Lastly, must have the following method:
 
 `greeting_message` - which returns the following format:
-""Hello! my name is FIRSTNAME LASTNAME and I'm AGE years old""
+""Hello! My name is FIRSTNAME LASTNAME and I'm AGE years old!""
 ```";
+    
+    public static async Task Seed(SocialDbContext context)
+    {
+        if (!context.ProgrammingChallenges.Any())
+        {
+            var question = scenario_one;
             var personClass = new ProgrammingChallenge
             {
                 Question = question,
@@ -47,7 +50,7 @@ Lastly, must have the following method:
             
             var personTest = new ProgrammingTest
             {
-                TestDockerImage = @"ghcr.io/jbraunsmajr/pythonsimplifiedtestsrepo:release",
+                TestDockerImage = @"ghcr.io/programming-simplified-community/programming-challenges-python:main",
                 ProgrammingChallengeId = personClass.Id,
                 ExecutableFileMountDestination = "/app/main.py",
                 Language = ProgrammingLanguage.Python,

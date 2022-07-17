@@ -25,10 +25,20 @@ public class ProgrammingChallengeSubmission
     public string DiscordChannelId { get; set; } = default!;
 
     /// <summary>
+    /// Number of current attempts for this challenge
+    /// </summary>
+    public int Attempt { get; set; } = 1;
+
+    /// <summary>
     /// Foreign key to <see cref="ProgrammingChallenge"/>
     /// </summary>
     public int ProgrammingChallengeId { get; set; }
     public ProgrammingChallenge ProgrammingChallenge { get; set; }
+
+    /// <summary>
+    /// Language in which this user attempted the challenge with
+    /// </summary>
+    public ProgrammingLanguage SubmittedLanguage { get; set; } = ProgrammingLanguage.Python;
 
     /// <summary>
     /// Content the user gave

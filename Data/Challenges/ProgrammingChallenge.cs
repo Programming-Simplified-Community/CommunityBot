@@ -29,6 +29,11 @@ public class ProgrammingChallenge
     /// Associated tests that go with this challenge, if any
     /// </summary>
     public List<ProgrammingTest> Tests { get; set; } = new();
+
+    /// <summary>
+    /// Indicates whether this challenge takes performance into consideration
+    /// </summary>
+    public bool IsTimed { get; set; } = false;
 }
 
 public class ProgrammingTest

@@ -3,13 +3,14 @@ using ChallengeAssistant.Requests;
 using Core.Validation;
 using Data;
 using Data.Challenges;
+using Data.CodeJam;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace ChallengeAssistant.Services;
 
-public record LeaderboardEntry(string Username, ProgrammingChallengeReport Report);
+public record LeaderboardEntry(string Username, int Attempts, int Points, double Duration);
 public class ChallengeService
 {
     private readonly ILogger<ChallengeService> _logger;
@@ -20,31 +21,6 @@ public class ChallengeService
         _logger = logger;
         _context = context;
     }
-    
-    /// <summary>
-    /// Retrieve leaderboard stats for a specific challenge
-    /// </summary>
-    /// <param name="title">Title for challenge</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>List of leaderboard entries, if the challenge was valid. Otherwise, an empty list is returned</returns>
-    public async Task<List<LeaderboardEntry>> ViewLeaderboardFor(string title,
-        CancellationToken cancellationToken = default)
-    {
-        var challenge =
-            await _context.ProgrammingChallenges.FirstOrDefaultAsync(x => x.Title == title, cancellationToken);
-
-        if (challenge is null)
-            return new();
-
-        var query = await (from report in _context.ChallengeReports
-                join user in _context.Users
-                    on report.UserId equals user.Id
-                where report.ProgrammingChallengeId == challenge.Id
-                select new LeaderboardEntry(user.UserName, report)
-            ).ToListAsync(cancellationToken);
-        return query.OrderByDescending(x=>x.Report.Points)
-            .ToList();
-    }
 
     /// <summary>
     /// Overall leaderboard
@@ -53,12 +29,33 @@ public class ChallengeService
     /// <returns>List of the top contestants</returns>
     public async Task<List<LeaderboardEntry>> ViewLeaderboard(CancellationToken cancellationToken = default)
     {
-        var query = await (from report in _context.ChallengeReports
-            join user in _context.Users
-                on report.UserId equals user.Id
-            select new LeaderboardEntry(user.UserName, report)).ToListAsync(cancellationToken);
+        var allsubs = await _context.ProgrammingChallengeSubmissions.ToListAsync(cancellationToken);
+        var submissions =allsubs.GroupBy(x=>x.UserId).ToDictionary(x => x.Key, x => x.Sum(y => y.Attempt));
 
-        return query.OrderByDescending(x => x.Report.Points).ToList();
+            var query = await (from report in _context.ChallengeReports
+                join user in _context.Users
+                    on report.UserId equals user.Id
+                select new
+                {
+                    UserId = user.Id,
+                    Points = report.Points,
+                    Duration = report.Duration,
+                    Report = report,
+                    Username = user.UserName
+                }
+            ).ToListAsync(cancellationToken);
+
+        return query.GroupBy(x => x.Username)
+            .Select(x =>
+                new LeaderboardEntry(x.Key, 
+                    submissions[x.First().UserId], 
+                    x.Sum(y => y.Points),
+                    x.Sum(y => y.Duration))
+            )
+            .OrderByDescending(x => x.Points)
+            .ThenBy(x=>x.Attempts)
+            .ThenBy(x=>x.Duration)
+            .ToList();
     }
     
     /// <summary>
@@ -67,7 +64,7 @@ public class ChallengeService
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     public async Task<List<ProgrammingChallenge>> GetAll(CancellationToken cancellationToken = default)
-        => await _context.ProgrammingChallenges.ToListAsync(cancellationToken);
+        => await _context.ProgrammingChallenges.Include(x=>x.Tests).ToListAsync(cancellationToken);
 
     /// <summary>
     /// Find a specific <see cref="ProgrammingChallenge"/> via <paramref name="id"/>

@@ -1,0 +1,141 @@
+﻿@using Data.Challenges
+@model Data.Challenges.ProgrammingChallengeReport
+
+@{
+    var username = Model?.User.UserName ?? "Test Report";
+}
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@username</title>
+    <script src="https://kit.fontawesome.com/09b9c96735.js" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+  </head>
+  <body class="bg-dark text-white">
+    <div class="container-fluid">
+        <div class="row">
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="sticky-top position-sticky pt-3">
+                    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                        <svg class="bi pe-none me-2" width="40" height="32"><use xlink:href="#bootstrap"/></svg>
+                        <span class="fs-4">@username</span>
+                    </a>
+                    
+                    <hr>
+                    
+                    <div class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white">
+                        <span class="fs-4 mx-auto">@Model.Points points of @Model.TestResults.Count</span>
+                    </div>
+                    
+                    <ul class="nav flex-column">
+                        @foreach (var test in Model.TestResults)
+                        {
+                            var iconClass = test.Result == TestStatus.Pass
+                                ? "fa-check text-success"
+                                : "fa-xmark text-danger";
+                            
+                            <li class="nav-item">
+                                <a href="#@test.Name" class="nav-link text-white text-decoration-none">
+                                    <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#"/></svg>
+                                    <i class="fa-solid @iconClass"></i>&nbsp;@test.Name
+                                </a>
+                            </li>    
+                        }
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex flex-column flex-shrink-0 mx-auto" style="max-width: 40%;">
+                    <h2>@Model.ProgrammingChallenge.Title</h2>
+                </div>
+                <div class="d-flex flex-column flex-shrink-0 mx-auto" style="max-width: 40%;">
+                    <canvas id="myChart"></canvas>
+                </div>
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-top mt-5">
+                    <div class="row mx-auto">
+                        @foreach (var iteration in Model.TestResults)
+                        {
+                            var iconClass = iteration.Result == TestStatus.Pass
+                                ? "fa-check text-success"
+                                : "fa-xmark text-danger";
+
+                            <div class="p-3 mb-3">
+                                <h4 id="@iteration.Name"><i class="fa-solid @iconClass"></i>&nbsp;&nbsp;@iteration.Name</h4>
+
+                                <span><i class="fa-solid fa-stopwatch text-info"></i>&nbsp;@iteration.Duration seconds</span>
+                                @if (!string.IsNullOrEmpty(iteration.AssertionMessage) && !string.IsNullOrEmpty(iteration.IncomingValues))
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-dark table-striped">
+                                            <thead>
+                                            <tr>
+                                                <th>Parameters</th>
+                                                <th>Assertion Error</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            @{
+                                                var incoming = iteration.IncomingValues!.Split("|||");
+                                                var assertions = iteration.AssertionMessage!.Split("|||");
+
+                                                for (var i = 0; i < incoming.Length; i++)
+                                                {
+                                                    <tr>
+                                                        <td>@incoming[i]</td>
+                                                        <td>@assertions[i]</td>
+                                                    </tr>
+                                                }
+                                            }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            </div>
+                            <hr/>
+                        }
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+
+    <script>
+        
+        const data = {
+            labels: [
+                'Fail',
+                'Pass'
+            ],
+            datasets: [{
+                label: 'Outcomes',
+                data: [
+                    @Model.TestResults.Sum(x=>x.TotalFails), 
+                    @Model.TestResults.Sum(x=>x.TotalRuns - x.TotalFails)],
+                backgroundColor: [
+                'rgb(255, 99, 132)',
+                'rgb(32,201,151)'
+                ],
+                hoverOffset: 4
+            }]
+        };
+
+        const config = {
+            type: 'pie',
+            data: data,
+        };
+
+        const myChart = new Chart(
+            document.getElementById('myChart'),
+            config
+        );
+        
+      </script>
+  </body>
+</html>

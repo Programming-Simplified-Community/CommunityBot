@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Api.Migrations
 {
     [DbContext(typeof(SocialDbContext))]
-    partial class SocialDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220714021434_challengetweak")]
+    partial class challengetweak
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,9 +56,6 @@ namespace Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<double>("Duration")
-                        .HasColumnType("double");
-
                     b.Property<int>("Points")
                         .HasColumnType("int");
 
@@ -94,9 +93,6 @@ namespace Api.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<int>("ProgrammingChallengeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SubmittedLanguage")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("SubmittedOn")
@@ -154,14 +150,8 @@ namespace Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("AssertionMessage")
-                        .HasColumnType("longtext");
-
                     b.Property<double?>("Duration")
                         .HasColumnType("double");
-
-                    b.Property<string>("IncomingValues")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -171,12 +161,6 @@ namespace Api.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("Result")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalFails")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalRuns")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

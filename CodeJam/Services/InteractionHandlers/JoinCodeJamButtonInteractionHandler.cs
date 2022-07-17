@@ -3,6 +3,7 @@ using Core.Validation;
 using Discord;
 using Discord.WebSocket;
 using DiscordHub;
+using Microsoft.Extensions.Options;
 
 namespace CodeJam.Services.InteractionHandlers;
 
@@ -19,14 +20,14 @@ public class JoinCodeJamButtonInteractionHandler : IDiscordButtonHandler
 
     public JoinCodeJamButtonInteractionHandler(ILogger<JoinCodeJamButtonInteractionHandler> logger, 
         DiscordSocketClient client, 
-        IConfiguration config)
+        IOptions<Settings> settings)
     {
         _logger = logger;
         _client = client;
-        _guildId = config.GetValue<ulong>("CodeJamBot:PrimaryGuildId");
-        _roleId = config.GetValue<ulong>("CodeJamBot:CodeJamRoleId");
-        _codeJamGeneralId = config.GetValue<ulong>("CodeJamBot:CodeJamGeneralId");
-        _codeJamRoleName = config["CodeJamBot:CodeJamRoleName"];
+        _guildId = settings.Value.PrimaryGuildId;
+        _roleId = settings.Value.CodeJamRoleId;
+        _codeJamGeneralId = settings.Value.CodeJamGeneralId;
+        _codeJamRoleName = settings.Value.CodeJamRoleName;
     }
 
     public async Task<ResultOf<HttpStatusCode>> HandleButton(SocketMessageComponent component)

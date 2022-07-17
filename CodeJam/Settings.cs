@@ -7,6 +7,11 @@ public sealed class Settings
     private OverwritePermissions? _generalCache;
     private GuildPermissions? _guildPerms;
 
+    public ulong PrimaryGuildId { get; init; }
+    public ulong WelcomeChannelId { get; init; }
+    public ulong CodeJamRoleId { get; init; }
+    public ulong CodeJamGeneralId { get; init; }
+
     public GuildPermissions GuildPermissions
     {
         get

@@ -41,8 +41,8 @@ public class CodeJamBot : BackgroundService, IDiscordService
         _context = context;
         _topicService = topicService;
         _settings = settings.Value;
-        _guildId = config.GetValue<ulong>("CodeJamBot:PrimaryGuild");
-        _welcomeChannelId = config.GetValue<ulong>("CodeJamBot:WelcomeChannelId");
+        _guildId = _settings.PrimaryGuildId;
+        _welcomeChannelId = _settings.WelcomeChannelId;
 
         Provider = serviceProvider.CreateScope().ServiceProvider;
 
@@ -51,7 +51,7 @@ public class CodeJamBot : BackgroundService, IDiscordService
         _client.UserJoined += ClientOnUserJoined;
     }
 
-     private async Task CreateWelcomeMessage(string username, string mention, string id)
+    private async Task CreateWelcomeMessage(string username, string mention, string id)
     {
         // Need to ensure we have our welcome channel readily available.
         var welcomeChannel = _client.GetGuild(_guildId).GetChannel(_welcomeChannelId);

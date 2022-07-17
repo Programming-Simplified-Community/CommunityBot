@@ -1,11 +1,20 @@
 ﻿using ChallengeAssistant.Reports;
 using Core.Storage;
 using Data.Challenges;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
 namespace ChallengeAssistant.DockerTypes;
+
+internal class PytestContainer
+{
+    public List<double> Duration { get; } = new();
+    public List<string> Assertions { get; } = new();
+    public List<string> Incoming { get; }= new();
+    public string Name { get; set; }
+    public int Total { get; set; }
+    public int Failed { get; set; }
+    public bool Passed => Total > 0 && Failed == 0;
+}
 
 public class PythonDockerTest : DockerTest
 {
@@ -34,7 +43,6 @@ public class PythonDockerTest : DockerTest
             Logger.LogWarning("Could not locate any report files at {Path}", AppStorage.ReportsPath);
             return null;
         }
-            
 
         var results = await ParsePytest(await File.ReadAllTextAsync(files.First()));
 
@@ -55,7 +63,12 @@ public class PythonDockerTest : DockerTest
             {
                 Name = test.TestName,
                 ProgrammingChallengeReportId = Test.ProgrammingChallengeId,
-                Result = test.Outcome == PytestOutcome.Passed ? TestStatus.Pass : TestStatus.Fail
+                Result = test.Outcome == PytestOutcome.Passed ? TestStatus.Pass : TestStatus.Fail,
+                Duration = test.CallDuration,
+                AssertionMessage = test.AssertionMessage,
+                IncomingValues = test.IncomingValues,
+                TotalFails = test.Failed,
+                TotalRuns = test.Total
             });
         }
 
@@ -106,32 +119,68 @@ public class PythonDockerTest : DockerTest
 
             var testArray = (JArray)root["tests"]!;
 
+            // We need a way of tracking multiple test-cases for the same test
+            Dictionary<string, PytestContainer> namedTests = new();
+            
             foreach (var item in testArray)
             {
-                var test = new PytestItem
-                {
-                    Outcome = item["outcome"]?.ToString() switch
-                    {
-                        "passed" => PytestOutcome.Passed,
-                        _ => PytestOutcome.Failed
-                    }
-                };
-
                 var id = item["nodeid"]!.ToObject<string>();
 
                 if (string.IsNullOrEmpty(id)) continue;
                 
                 var start = id.IndexOf(':') + 2;
                 var end = id.IndexOf('[');
-
-                test.TestName = end < 0
+                
+                var testName = end < 0
                     ? id.Substring(start)
                     : id.Substring(start, Math.Max(end-start,1));
 
-                report.Tests.Add(test);
+                if (!namedTests.ContainsKey(testName))
+                    namedTests.Add(testName, new()
+                    {
+                        Name = testName
+                    });
+                
+                var outcome = item["outcome"]?.ToString() switch
+                {
+                    "passed" => PytestOutcome.Passed,
+                    _ => PytestOutcome.Failed
+                };
+
+                if (outcome == PytestOutcome.Failed)
+                {
+                    namedTests[testName].Failed += 1;
+                    namedTests[testName].Assertions
+                        .Add(item["call"]?["crash"]?["message"]?.ToObject<string>() ?? string.Empty);
+
+                    var longrep = item["call"]?["longrepr"]?.ToObject<string>() ?? string.Empty;
+                    
+                    if (!string.IsNullOrWhiteSpace(longrep))
+                    {
+                        var parameterEnd = longrep.IndexOf("\n\n");
+                        longrep = longrep[..parameterEnd];
+                    }
+                    
+                    namedTests[testName].Incoming.Add(longrep);
+                }
+                
+                namedTests[testName].Total++;
+                namedTests[testName].Duration.Add(item["call"]?["duration"]?.ToObject<double>() ?? -1);
             }
 
-            return Task.FromResult(report);
+            foreach (var container in namedTests.Values)
+                report.Tests.Add(new()
+                {
+                    TestName = container.Name,
+                    Outcome = container.Passed ? PytestOutcome.Passed : PytestOutcome.Failed,
+                    AssertionMessage = string.Join("|||", container.Assertions),
+                    CallDuration = container.Duration.Sum()/container.Duration.Count,
+                    IncomingValues = string.Join("|||", container.Incoming),
+                    Failed = container.Failed,
+                    Total = container.Total
+                });
+            
+            return Task.FromResult<PytestReport?>(report);
         }
         catch (Exception ex)
         {

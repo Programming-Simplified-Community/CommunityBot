@@ -7,10 +7,7 @@ using Discord;
 using Discord.WebSocket;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Razor.Templating.Core;
 
 namespace ChallengeAssistant.Services;
 
@@ -90,6 +87,7 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
                     existingReport.Points = passing;
                     _context.TestResults.RemoveRange(existingReport.TestResults);
                     _context.TestResults.AddRange(results.TestResults);
+                    results = existingReport;
                 }
                 else
                 {
@@ -124,14 +122,13 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
                 }
                 else
                 {
-                    var block = "```yml\n";
-                    
+                    sb.AppendLine("```yml");
                     foreach (var test in results.TestResults)
-                        block += $"{test.Name}: {test.Result}\n";
-                    
-                    block += "\n```";
-                    sb.AppendLine(block);
+                        sb.AppendLine($"{test.Name}: {test.Result}");
+                    sb.AppendLine("\n```");
                 }
+
+                var reportHtml = await RazorTemplateEngine.RenderAsync("~/Views/Shared/TestReport.cshtml", results);
 
                 SubmissionFeedbackEmbedInfo feedback = new(user.DiscordDisplayName, sb.ToString(), $"{passing}/{total}",
                     embedColor);
@@ -159,11 +156,29 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
                 if (thread is null)
                     thread = await channel.CreateThreadAsync("Test Results");
 
+                var discordUser = await _client.GetUserAsync(ulong.Parse(user.DiscordUserId!));
+
                 await thread.SendMessageAsync(embed: new EmbedBuilder()
                     .WithTitle(feedback.Title)
                     .WithDescription(feedback.Description)
                     .WithFooter(feedback.Footer)
                     .WithColor(embedColor).Build());
+
+                // Just to avoid rate limiting... wait a few seconds before sending back-to-back messages
+                await Task.Delay(TimeSpan.FromSeconds(2));
+
+                if (results.TestResults.Any())
+                {
+                    using var reportStream = new MemoryStream();
+                    var reportHtmlBytes = Encoding.ASCII.GetBytes(reportHtml);
+                    reportStream.Write(reportHtmlBytes);
+                    await reportStream.FlushAsync();
+                    reportStream.Position = 0;
+                    await thread.SendFileAsync(reportStream,
+                        $"{user.UserName}-test-results.html",
+                        $"{discordUser.Mention}, here's a more detailed test report");
+                }
+
             }
             else
             {

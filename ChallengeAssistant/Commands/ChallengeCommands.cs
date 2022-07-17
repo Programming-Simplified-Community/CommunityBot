@@ -1,9 +1,9 @@
-﻿using ChallengeAssistant.Commands.AutoComplete;
+﻿using System.Text;
 using ChallengeAssistant.Services;
 using Discord;
 using Discord.Interactions;
 using DiscordHub;
-using Microsoft.Extensions.Logging;
+using Razor.Templating.Core;
 
 namespace ChallengeAssistant.Commands;
 
@@ -30,25 +30,60 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
             await Context.Channel.DeleteMessageAsync(message);
             await Task.Delay(TimeSpan.FromSeconds(2));
         }
+
+        await Context.Channel.SendMessageAsync(embed: new EmbedBuilder()
+            .WithTitle("Instructions")
+            .WithDescription("Due to character limitations on Discord, challenge information is now distributed through these HTML files!\n\n" +
+                             "Please note... that apparently your browser may directly open them without downloading. I suspect this has to do with their content delivery system?\n\n" +
+                             "Otherwise, download the HTML file and open with your favorite browser!\n\n" +
+                             "The leaderboard is ranked by #points, then by #attempts, then by duration")
+            .WithColor(Color.Orange)
+            .WithImageUrl("https://images.unsplash.com/photo-1605379399642-870262d3d051?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1806&q=80")
+            .WithThumbnailUrl("https://img.freepik.com/free-vector/laptop-with-program-code-isometric-icon-software-development-programming-applications-dark-neon_39422-971.jpg?w=1380&t=st=1658011057~exp=1658011657~hmac=5168ecbad8636d17080e01d76bad5863e488966221d0e3dee7d4b21e9b45b868")
+            .Build());
         
         var challenges = (await _service.GetAll())
             .OrderBy(x=>x.Title);
 
         foreach (var challenge in challenges)
         {
-            var e = new EmbedBuilder()
-                .WithTitle(challenge.Title)
-                .WithDescription(challenge.Question)
-                .WithColor(Color.Teal);
-                
+            var challengeHtml = await RazorTemplateEngine.RenderAsync("~/Views/Shared/Challenge.cshtml", challenge);
+            using var reportStream = new MemoryStream();
+            var reportHtmlBytes = Encoding.ASCII.GetBytes(challengeHtml);
+            reportStream.Write(reportHtmlBytes);
+            await reportStream.FlushAsync();
+            reportStream.Position = 0;
+            
+            
             // The button shall be used to create a modal linked to a specific challenge.
-            var comp = new ComponentBuilder()
-                .WithButton(new ButtonBuilder()
-                    .WithLabel("Attempt")
-                    .WithCustomId(string.Format(Constants.ATTEMPT_BUTTON_NAME_FORMAT, challenge.Id))
-                    .WithStyle(ButtonStyle.Success));
+            var comp = new ComponentBuilder();
 
-            await Context.Channel.SendMessageAsync(embed: e.Build(), components: comp.Build());
+            int styleIndex = 0;
+            foreach (var test in challenge.Tests)
+            {
+                comp.WithButton(new ButtonBuilder()
+                    .WithCustomId(string.Format(Constants.ATTEMPT_BUTTON_NAME_FORMAT, test.Language.ToString(),
+                        challenge.Id))
+                    .WithLabel(test.Language.ToString())
+                    .WithStyle(styleIndex switch
+                    {
+                        1 => ButtonStyle.Danger,
+                        2 => ButtonStyle.Link,
+                        3 => ButtonStyle.Secondary,
+                        4 => ButtonStyle.Primary,
+                        _ => ButtonStyle.Success,
+                    }));
+                styleIndex++;
+                styleIndex %= 5;
+            }
+            
+            await Context.Channel.SendFileAsync(
+                reportStream, 
+                filename: $"{challenge.Title}.html",
+                text: $"{challenge.Title}",
+                components: comp.Build()
+            );
+                
             await Task.Delay(TimeSpan.FromSeconds(2));
         }
         
@@ -56,32 +91,6 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
         {
             x.Content = "Complete";
         });
-    }
-
-    [SlashCommand("leaderboard-for", "view specific leaderboard")]
-    public async Task ViewLeaderboardFor(
-        [Autocomplete(typeof(ProgrammingChallengeAutoCompleteProvider))]
-        string challenge)
-    {
-        var entries = await _service.ViewLeaderboardFor(challenge);
-
-        if (!entries.Any())
-        {
-            await RespondAsync("Appears no one has tried this challenge yet!", ephemeral: true);
-            return;
-        }
-
-        var top = entries.Take(20);
-
-        var e = new EmbedBuilder()
-            .WithTitle($"Leaderboard | {challenge}")
-            .WithFooter($"Requested by: {Context.User.Username}")
-            .WithColor(Color.Orange);
-
-        foreach (var item in top)
-            e.AddField(item.Username, item.Report.Points, inline: true);
-
-        await RespondAsync(embed: e.Build());
     }
 
     [SlashCommand("leaderboard", "view leaderboard")]
@@ -101,14 +110,22 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
         {
             var top = entries.Take(20);
 
+            var sb = new StringBuilder();
+            sb.AppendLine("```yml");
+
+            sb.AppendLine(string.Format("| {0,15} | {1,15} | {2,15} |", "Username", "Points", "Attempts"));
+            
+            foreach (var item in top)
+                sb.AppendLine(string.Format("| {0,15} | {1,15} | {2,15} |", item.Username, item.Points, item.Attempts));
+            
+            sb.AppendLine("```");
+            
             var e = new EmbedBuilder()
                 .WithTitle($"Leaderboard")
+                .WithDescription(sb.ToString())
                 .WithFooter($"Requested by: {Context.User.Username}")
                 .WithColor(Color.Orange);
-
-            foreach (var item in top)
-                e.AddField(item.Username, item.Report.Points, inline: true);
-
+            
             await ModifyOriginalResponseAsync(message =>
             {
                 message.Content = string.Empty;
@@ -120,26 +137,5 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
             await ModifyOriginalResponseAsync(message => message.Content = "Failed to fetch");
             _logger.LogError("Error occurred while fetching leaderboard: {Exception}", ex);
         }
-    }
-    
-    [SlashCommand("view", "view available challenges")]
-    public async Task ViewChallenges([Autocomplete(typeof(ProgrammingChallengeAutoCompleteProvider))] string title)
-    {
-        var item = await _service.FindChallenge(title);
-
-        if (item is null)
-        {
-            await RespondAsync($"Was unable to locate challenge: {title}", ephemeral: true);
-            return;
-        }
-
-        _logger.LogInformation("{User} requested to look at challenge {Title}", Context.User.Username, title);
-        
-        await RespondAsync(embed: new EmbedBuilder()
-                .WithTitle(item.Title)
-                .WithDescription(item.Question)
-                .WithFooter(string.Join(", ", item.Tests.Select(x => x.Language)))
-                .Build(),
-            ephemeral: true);
     }
 }

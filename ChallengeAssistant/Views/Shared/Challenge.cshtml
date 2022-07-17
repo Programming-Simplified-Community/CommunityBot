@@ -1,0 +1,64 @@
+﻿@using Core.Renderer
+@using Microsoft.AspNetCore.Html
+@model Data.Challenges.ProgrammingChallenge
+
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@Model.Title</title>
+    <script src="https://kit.fontawesome.com/09b9c96735.js" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <link rel="stylesheet" href="/path/to/styles/default.min.css">
+    <script src="/path/to/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+  </head>
+  <body class="bg-dark text-white">
+    <div class="container-fluid">
+        <div class="row">
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex flex-column flex-shrink-0 mx-auto" style="max-width: 40%;">
+                    <h2>@Model.Title</h2>
+                </div>
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-top mt-5">
+                    <div class="row mx-auto">
+                        <div class="p-3 mb-3">
+                            @if (Model.IsTimed)
+                            {
+                                <div class="alert bg-secondary text-center">
+                                    <p style="font-weight: 650; font-size: large">
+                                        <i class="fa-solid fa-stopwatch text-info"></i>
+                                        &nbsp;Your code's performance matters
+                                        <i class="fa-solid fa-stopwatch text-info"></i>
+                                        <br/>
+                                        <small>Those with the fastest solution will receive a better score</small>
+                                    </p>
+                                </div>
+                            }
+                            
+                            @(new HtmlString(Renderer.RenderMarkdownToHtml(Model.Question)))
+                            
+                            <hr/>
+
+                            @if (!string.IsNullOrEmpty(Model.Explanation))
+                            {
+                                @(new HtmlString(Renderer.RenderMarkdownToHtml(Model.Explanation)))
+                                <hr/>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(Model.Tip))
+                            {
+                                @(new HtmlString(Renderer.RenderMarkdownToHtml(Model.Tip)))
+                            }
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+  </body>
+</html>

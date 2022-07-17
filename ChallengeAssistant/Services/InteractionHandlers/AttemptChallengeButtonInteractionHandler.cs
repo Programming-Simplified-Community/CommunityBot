@@ -23,15 +23,10 @@ public class AttemptChallengeButtonInteractionHandler : IDiscordButtonHandler
 
     public async Task<ResultOf<HttpStatusCode>> HandleButton(SocketMessageComponent component)
     {
-        if (!component.Data.CustomId.ExtractFrom(Constants.ATTEMPT_BUTTON_PREFIX, out var textId))
-            return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);
-
-        int.TryParse(textId, out var id);
-        
-        if (id < 0)
+        if(!component.Data.CustomId.ExtractChallengeInfo(Constants.ATTEMPT_BUTTON_PREFIX, out var challengeInfo))
             return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);
         
-        var challenge = await _context.ProgrammingChallenges.FirstOrDefaultAsync(x => x.Id == id);
+        var challenge = await _context.ProgrammingChallenges.FirstOrDefaultAsync(x => x.Id == challengeInfo!.Value.Id);
 
         if (challenge is null)
         {
@@ -41,7 +36,7 @@ public class AttemptChallengeButtonInteractionHandler : IDiscordButtonHandler
         
         var modal = new ModalBuilder()
             .WithTitle(challenge.Title)
-            .WithCustomId(string.Format(Constants.CHALLENGE_MODAL_NAME_FORMAT, challenge.Id))
+            .WithCustomId(string.Format(Constants.CHALLENGE_MODAL_NAME_FORMAT, challengeInfo!.Value.Language.ToString(), challenge.Id))
             .AddTextInput(new TextInputBuilder()
                 .WithCustomId("code")
                 .WithLabel("Code")

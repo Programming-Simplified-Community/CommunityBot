@@ -29,8 +29,33 @@ public class PytestReport
 
 public class PytestItem
 {
+    /// <summary>
+    /// This tracks how long this particular test item took to execute
+    /// </summary>
+    public double CallDuration { get; set; }
+    
+    /// <summary>
+    /// Outcome of the test call
+    /// </summary>
     public PytestOutcome Outcome { get; set; }
+
+    public int Total { get; set; }
+    public int Failed { get; set; }
+
+    /// <summary>
+    /// Name of tests
+    /// </summary>
     public string TestName { get; set; }
+
+    /// <summary>
+    /// Reason for error
+    /// </summary>
+    public string? AssertionMessage { get; set; }
+
+    /// <summary>
+    /// Values used in test
+    /// </summary>
+    public string? IncomingValues { get; set; }
 }
 
 public class PytestSummary
