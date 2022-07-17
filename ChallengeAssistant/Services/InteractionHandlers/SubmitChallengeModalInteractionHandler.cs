@@ -31,14 +31,7 @@ public class SubmitChallengeModalInteractionHandler : IDiscordModalHandler
     {
         try
         {
-            if (!modal.Data.CustomId.ExtractFrom(Constants.CHALLENGE_MODAL_PREFIX, out var textId))
-            {
-                return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);
-            }
-
-            int.TryParse(textId, out var challengeId);
-            
-            if(challengeId <= 0)
+            if (!modal.Data.CustomId.ExtractChallengeInfo(Constants.CHALLENGE_MODAL_PREFIX, out var challengeInfo))
                 return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);
             
             var components = modal.Data.Components.ToList();
@@ -49,30 +42,52 @@ public class SubmitChallengeModalInteractionHandler : IDiscordModalHandler
 
             var challenge = await _context.ProgrammingChallenges
                 .Include(x => x.Tests)
-                .FirstOrDefaultAsync(x => x.Id == challengeId);
+                .FirstOrDefaultAsync(x => x.Id == challengeInfo!.Value.Id);
             
             // Ensure the challenge is one we actually have in store
             if (challenge is null)
             {
                 _logger.LogError("Was unable to locate challenge with Id {Id} for user {Username}",
-                    challengeId,
+                    challengeInfo!.Value.Id,
                     modal.User.Username);
                 return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);
             }
             
             // For now we only have 1 component in there, the code.
             var code = components.First(x => x.CustomId == "code").Value;
-            
-            var submission = new ProgrammingChallengeSubmission
-            {
-                UserSubmission = code,
-                ProgrammingChallengeId = challengeId,
-                DiscordGuildId = modal.GuildId?.ToString() ?? string.Empty,
-                DiscordChannelId = modal.ChannelId?.ToString() ?? string.Empty,
-                UserId = user.Id
-            };
 
-            _context.ProgrammingChallengeSubmissions.Add(submission);
+            var existingSubmission = await _context.ProgrammingChallengeSubmissions
+                .FirstOrDefaultAsync(x => x.UserId == user.Id && 
+                                          x.ProgrammingChallengeId == challengeInfo!.Value.Id &&
+                                          x.SubmittedLanguage == challengeInfo!.Value.Language);
+            
+            /*
+                We don't need a billion submission records for the SAME language + challenge for a user. 
+                Just update existing records when applicable to conserve DB space.
+             */
+            
+            if (existingSubmission is not null)
+            {
+                existingSubmission.UserSubmission = code;
+                existingSubmission.DiscordChannelId = modal.ChannelId?.ToString() ?? string.Empty;
+                existingSubmission.DiscordGuildId = modal.GuildId?.ToString() ?? string.Empty;
+                existingSubmission.Attempt++;
+            }
+            else
+            {
+                existingSubmission =new ProgrammingChallengeSubmission
+                {
+                    UserSubmission = code,
+                    SubmittedLanguage = challengeInfo!.Value.Language,
+                    ProgrammingChallengeId = challengeInfo!.Value.Id,
+                    DiscordGuildId = modal.GuildId?.ToString() ?? string.Empty,
+                    DiscordChannelId = modal.ChannelId?.ToString() ?? string.Empty,
+                    UserId = user.Id
+                };
+                
+                _context.ProgrammingChallengeSubmissions.Add(existingSubmission);
+            }
+
             await _context.SaveChangesAsync();
             
             // Inform the user that their request is processing. Also letting them know how many others are waiting for their code to be tested
@@ -84,7 +99,7 @@ public class SubmitChallengeModalInteractionHandler : IDiscordModalHandler
             
             await modal.RespondAsync(embed: e.Build(), ephemeral: true);
             
-            UserSubmissionQueueItem item = new(challenge.Tests.First(), submission, code);
+            UserSubmissionQueueItem item = new(challenge.Tests.First(x=>x.Language == challengeInfo!.Value.Language), existingSubmission, code);
             await runner.Enqueue(item);
         }
         catch (Exception ex)

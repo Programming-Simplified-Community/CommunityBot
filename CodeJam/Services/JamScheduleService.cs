@@ -231,7 +231,7 @@ public class JamScheduleService : BackgroundService
         {
             if (!DownloadedUsers)
             {
-                DownloadedUsers = await _discord.DownloadUsers(_config.GetValue<ulong>("CodeJamBot:PrimaryGuild"));
+                DownloadedUsers = await _discord.DownloadUsers(_config.GetValue<ulong>("CodeJamBot:Settings:PrimaryGuildId"));
 
                 if (!DownloadedUsers)
                 {
