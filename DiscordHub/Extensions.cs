@@ -1,4 +1,4 @@
-﻿using Data.Challenges;
+using Data.Challenges;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordHub;
