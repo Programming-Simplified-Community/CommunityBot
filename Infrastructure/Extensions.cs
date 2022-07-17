@@ -33,4 +33,9 @@ public static class Extensions
         
         return existingUser;
     }
+
+    public static async ValueTask<SocialUser?> GetUserFromDiscordId(this SocialDbContext context, string discordId)
+    {
+        return await context.Users.FirstOrDefaultAsync(x => x.DiscordUserId == discordId);
+    }
 }

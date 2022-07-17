@@ -16,4 +16,25 @@ public static class Constants
 
     public const string ATTEMPT_BUTTON_PREFIX = "attempt";
     public const string ATTEMPT_BUTTON_NAME_FORMAT = $"{ATTEMPT_BUTTON_PREFIX}_{{0}}_{{1}}";
+
+    public const string TEAM_NAME_VOTE_YES_BUTTON_PREFIX = "tnvy";
+    public const string TEAM_NAME_VOTE_NO_BUTTON_PREFIX = "tnvn";
+
+    /// <summary>
+    /// <p>String format</p>
+    /// <list type="number">
+    /// <item>TeamId</item>
+    /// <item>TeamNameVoteId</item>
+    /// </list>
+    /// </summary>
+    public const string TEAM_NAME_VOTE_YES_BUTTON_NAME_FORMAT = $"{TEAM_NAME_VOTE_YES_BUTTON_PREFIX}_{{0}}_{{1}}";
+
+    /// <summary>
+    /// <p>String format</p>
+    /// <list type="number">
+    /// <item>Team Id</item>
+    /// <item>TeamNameVoteId</item>
+    /// </list>
+    /// </summary>
+    public const string TEAM_NAME_VOTE_NO_BUTTON_NAME_FORMAT = $"{TEAM_NAME_VOTE_NO_BUTTON_PREFIX}_{{0}}_{{1}}";
 }
