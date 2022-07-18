@@ -61,11 +61,7 @@ public class TeamNameNoButtonInteractionHandler : IDiscordButtonHandler
         {
             await component.Message.ModifyAsync(x =>
             {
-                x.Content = "```yml\n" +
-                            $"Yes: {response.Result.Yes}\n" +
-                            $"No: {response.Result.No}\n" +
-                            $"Pending: {response.Result.Pending}\n" +
-                            "```";
+                x.Content = response.Result.ToString();
             });
         }
         

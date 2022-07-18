@@ -8,7 +8,18 @@ using Microsoft.Extensions.Options;
 
 namespace CodeJam.Services;
 
-public record TeamVoteCountResponse(HttpStatusCode StatusCode, string Message, int Yes, int No, int Pending);
+public record TeamVoteCountResponse(HttpStatusCode StatusCode, string Message, int Yes, int No, int Pending)
+{
+    public override string ToString()
+    {
+        return "```yml\n" +
+               $"Yes: {Yes}\n" +
+               $"No: {No}\n" +
+               $"Pending: {Pending}\n" +
+               "```";
+    }
+}
+
 
 public class TeamNameService
 {
