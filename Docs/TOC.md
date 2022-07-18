@@ -1,0 +1,5 @@
+1. [Environment Setup](EnvironmentSetup.md)
+2. [Settings](Settings.md)
+3. [Code Jam Commands](CodeJamCommands.md)
+4. [Challenge Assistant Commands](ChallengeAssistantCommands.md)
+5. [Challenge Service Overiview](ChallengeService-Overview.md)
