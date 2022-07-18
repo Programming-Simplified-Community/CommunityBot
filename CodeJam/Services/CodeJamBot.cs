@@ -48,65 +48,8 @@ public class CodeJamBot : BackgroundService, IDiscordService
 
         _client.Log += LogAsync;
         _client.Ready += ReadyAsync;
-        _client.UserJoined += ClientOnUserJoined;
     }
-
-    private async Task CreateWelcomeMessage(string username, string mention, string id)
-    {
-        // Need to ensure we have our welcome channel readily available.
-        var welcomeChannel = _client.GetGuild(_guildId).GetChannel(_welcomeChannelId);
-        
-        if (welcomeChannel is null)
-        {
-            _logger.LogWarning(
-                "Was unable to welcome {Username} to the server. Unable to locate welcome channel with Id: {Id}",
-                username,
-                _welcomeChannelId);
-            return;
-        }
-        
-        // We have to limit ourselves on how many components we show due to discord limits. 
-        var registerableTopics = await _topicService.GetRegisterableTopics();
-
-        // If there are no topics to register for we'll skip this entire thing
-        if(!registerableTopics.Any())
-            return;
-        
-        var message =
-            $"Greetings, {mention}! If you're here to participate in one of the following code-jams:\n" +
-            "```yml\n" +
-            $"{string.Join("\n", registerableTopics.Select(x=>x.Title))}\n" +
-            "```\n" +
-            "Join our code-jam channel by clicking the join button below!";
-        
-        var compBuilder = new ComponentBuilder()
-            .WithButton(new ButtonBuilder()
-                .WithCustomId(string.Format(Constants.JOIN_CODE_JAM_BUTTON_NAME_FORMAT, id))
-                .WithStyle(ButtonStyle.Primary)
-                .WithLabel("Join"))
-            .WithButton(new ButtonBuilder()
-                .WithCustomId(string.Format(Constants.NO_THANKS_JAM_BUTTON_NAME_FORMAT, id))
-                .WithLabel("No Thanks")
-                .WithStyle(ButtonStyle.Danger));
-        
-        var textChannel = welcomeChannel as SocketTextChannel;
-        
-        await textChannel!.SendMessageAsync(embed: new EmbedBuilder()
-                .WithTitle("Welcome")
-                .WithDescription(message)
-                .WithColor(Color.Blue)
-                .Build(),
-            components: compBuilder.Build());
-
-        _logger.LogInformation("Welcomed {Username} to the server", username);
-    }
-
-    private async Task ClientOnUserJoined(SocketGuildUser arg)
-    {
-        await Task.Delay(TimeSpan.FromSeconds(30));
-        await CreateWelcomeMessage(arg.Username, arg.Mention, arg.Id.ToString());
-    }
-
+    
     private bool _isReady;
     private readonly ulong _guildId;
     private static Dictionary<ulong, IGuildChannel> s_CategoryChannels = new();

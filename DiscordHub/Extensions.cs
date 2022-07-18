@@ -35,6 +35,31 @@ public static class Extensions
         output = text[(prefix.Length + 1)..];
         return true;
     }
+    
+    /// <summary>
+    /// <p>Verifies <paramref name="text"/> begins with <paramref name="prefix"/></p>
+    /// <p>Extract team and team name vote id from a 'custom id'</p>
+    /// </summary>
+    /// <param name="text"></param>
+    /// <param name="prefix"></param>
+    /// <param name="output"></param>
+    /// <returns></returns>
+    public static bool ExtractTeamVoteInfo(this string text, string prefix,
+        out (int TeamId, int TeamNameVoteId)? output)
+    {
+        if (!text.StartsWith(prefix))
+        {
+            output = null;
+            return false;
+        }
+
+        var split = text.Split('_');
+        int.TryParse(split[1], out var teamId);
+        int.TryParse(split[^1], out var teamNameVoteId);
+
+        output = new(teamId, teamNameVoteId);
+        return true;
+    }
 
     /// <summary>
     /// <p>Verifies <paramref name="text"/> begins with <paramref name="prefix"/></p>

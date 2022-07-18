@@ -28,6 +28,9 @@ public static class ServiceCollectionExtensions
             .AddSingleton<CodeJamBot>()
             .AddHostedService(x=>x.GetRequiredService<CodeJamBot>())
             .AddSingleton<IDiscordService>(x=>x.GetRequiredService<CodeJamBot>())
-            .AddHostedService<JamScheduleService>();
+            .AddHostedService<JamScheduleService>()
+            .AddSingleton<TeamNameService>()
+            .AddSingleton<IDiscordButtonHandler, TeamNameYesButtonInteractionHandler>()
+            .AddSingleton<IDiscordButtonHandler, TeamNameNoButtonInteractionHandler>();
     }
 }
