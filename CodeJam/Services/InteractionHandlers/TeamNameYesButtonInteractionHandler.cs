@@ -35,7 +35,10 @@ public class TeamNameYesButtonInteractionHandler : IDiscordButtonHandler
             teamInfo!.Value.TeamNameVoteId,
             true);
 
-        if (response.Result == HttpStatusCode.Created)
+        if (response.Result is null)
+            return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);
+        
+        if (response.Result.StatusCode == HttpStatusCode.Created)
         {
             await component.Message.DeleteAsync();
             await component.Channel.SendMessageAsync(embed: new EmbedBuilder()
@@ -44,7 +47,28 @@ public class TeamNameYesButtonInteractionHandler : IDiscordButtonHandler
                 .WithDescription("Your team's information has been updated!")
                 .Build());
         }
+        else if (response.Result.StatusCode == HttpStatusCode.Ambiguous)
+        {
+            await component.Message.DeleteAsync();
+            await component.Channel.SendMessageAsync(embed: new EmbedBuilder()
+                .WithColor(Color.Magenta)
+                .WithTitle("Stalemate")
+                .WithDescription("Appears the team is evenly split on this one!")
+                .WithFooter(response.Message)
+                .Build());
+        }
+        else
+        {
+            await component.Message.ModifyAsync(x =>
+            {
+                x.Content = "```yml\n" +
+                            $"Yes: {response.Result.Yes}\n" +
+                            $"No: {response.Result.No}\n" +
+                            $"Pending: {response.Result.Pending}\n" +
+                            "```";
+            });
+        }
         
-        return response;
+        return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);
     }
 }

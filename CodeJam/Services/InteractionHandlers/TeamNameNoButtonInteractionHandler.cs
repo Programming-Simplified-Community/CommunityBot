@@ -33,8 +33,11 @@ public class TeamNameNoButtonInteractionHandler : IDiscordButtonHandler
             teamInfo!.Value.TeamId,
             teamInfo!.Value.TeamNameVoteId,
             false);
-
-        if (response.Result == HttpStatusCode.NotAcceptable)
+        
+        if(response.Result is null)
+            return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);
+        
+        if (response.Result.StatusCode == HttpStatusCode.NotAcceptable)
         {
             await component.Message.DeleteAsync();
             await component.Channel.SendMessageAsync(embed:
@@ -43,6 +46,27 @@ public class TeamNameNoButtonInteractionHandler : IDiscordButtonHandler
                     .WithTitle("Welp...")
                     .WithDescription($"Appears the name `{response.Message}` didn't sparkle across the board...")
                     .Build());
+        }
+        else if (response.Result.StatusCode == HttpStatusCode.Ambiguous)
+        {
+            await component.Message.DeleteAsync();
+            await component.Channel.SendMessageAsync(embed: new EmbedBuilder()
+                .WithColor(Color.Magenta)
+                .WithTitle("Stalemate")
+                .WithDescription("Appears the team is evenly split on this one!")
+                .WithFooter(response.Message)
+                .Build());
+        }
+        else
+        {
+            await component.Message.ModifyAsync(x =>
+            {
+                x.Content = "```yml\n" +
+                            $"Yes: {response.Result.Yes}\n" +
+                            $"No: {response.Result.No}\n" +
+                            $"Pending: {response.Result.Pending}\n" +
+                            "```";
+            });
         }
         
         return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);

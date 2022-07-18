@@ -14,7 +14,7 @@ public class TeamCommands : InteractionModuleBase<SocketInteractionContext>
     private readonly Emoji _thumbsUp = new ("👍");
     private readonly Emoji _thumbsDown = new ("👎");
     
-    [RequireUserPermission(GuildPermission.ManageChannels)]
+    [RequireUserPermission(GuildPermission.ManageMessages)]
     [SlashCommand("change-name", "update team name")]
     public async Task UpdateTeamName(string teamName)
     {

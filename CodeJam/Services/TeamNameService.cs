@@ -8,6 +8,8 @@ using Microsoft.Extensions.Options;
 
 namespace CodeJam.Services;
 
+public record TeamVoteCountResponse(HttpStatusCode StatusCode, string Message, int Yes, int No, int Pending);
+
 public class TeamNameService
 {
     private readonly ILogger<TeamNameService> _logger;
@@ -22,6 +24,20 @@ public class TeamNameService
         _context = context;
         _client = client;
         _guildId = settings.Value.PrimaryGuildId;
+    }
+    
+    /// <summary>
+    /// Checks to see if all members voted. If all members voted AND the number of opposing votes equal, we're
+    /// at a stalemate
+    /// </summary>
+    /// <param name="team"></param>
+    /// <param name="info"></param>
+    /// <returns></returns>
+    private bool IsStalemate(Team team, TeamNameVote info)
+    {
+        var middle = Math.Ceiling((double)team.Members.Count / 2);
+        return info.Votes.Count == team.Members.Count && 
+               info.Votes.Count(x=>x.Value) == info.Votes.Count(x=>!x.Value);
     }
 
     /// <summary>
@@ -74,25 +90,25 @@ public class TeamNameService
         return item;
     }
 
-    public async Task<ResultOf<HttpStatusCode>> AddOrUpdateUserVote(string discordUserId, int teamId, int teamVoteId, bool value)
+    public async Task<ResultOf<TeamVoteCountResponse?>> AddOrUpdateUserVote(string discordUserId, int teamId, int teamVoteId, bool value)
     {
         var user = await _context.GetUserFromDiscordId(discordUserId);
 
         if (user is null)
-            return ResultOf<HttpStatusCode>.NotFound("Could not locate user");
+            return ResultOf<TeamVoteCountResponse?>.NotFound("Could not locate user");
 
         var team = await _context.CodeJamTeams
             .Include(x=>x.Members)
             .FirstOrDefaultAsync(x => x.Id == teamId);
 
         if (team is null)
-            return ResultOf<HttpStatusCode>.NotFound("Could not locate team");
+            return ResultOf<TeamVoteCountResponse?>.NotFound("Could not locate team");
 
         var voteItem = await _context.TeamNameVotes.Include(x => x.Votes)
             .FirstOrDefaultAsync(x => x.Id == teamVoteId);
 
         if (voteItem is null)
-            return ResultOf<HttpStatusCode>.NotFound("Unable to find team vote");
+            return ResultOf<TeamVoteCountResponse?>.NotFound("Unable to find team vote");
 
         var existingVote = voteItem.Votes.FirstOrDefault(x => x.UserId == user.Id);
 
@@ -110,6 +126,10 @@ public class TeamNameService
 
             voteItem.Votes.Add(vote);
         }
+
+        var yes = voteItem.Votes.Count(x => x.Value);
+        var no = voteItem.Votes.Count(x => !x.Value);
+        var pending = team.Members.Count - (yes + no);
         
         await _context.SaveChangesAsync();
         
@@ -135,7 +155,7 @@ public class TeamNameService
                     team.Name,
                     voteItem.ProposedName,
                     team.RoleId);
-                return ResultOf<HttpStatusCode>.Error("Server error");
+                return ResultOf<TeamVoteCountResponse?>.Error("Server error");
             }
 
             await teamRole.ModifyAsync(x =>
@@ -154,7 +174,7 @@ public class TeamNameService
                     team.Name,
                     voteItem.ProposedName,
                     team.TeamChannelId);
-                return ResultOf<HttpStatusCode>.Error("Server error");
+                return ResultOf<TeamVoteCountResponse?>.Error("Server error");
             }
 
             await channel.ModifyAsync(x =>
@@ -163,7 +183,7 @@ public class TeamNameService
             });
             
             _logger.LogInformation("Updated {Team}'s channel name to {Name}", team.Name, voteItem.ProposedName);
-            return ResultOf<HttpStatusCode>.Success(HttpStatusCode.Created);
+            return ResultOf<TeamVoteCountResponse?>.Success(new(HttpStatusCode.Created, string.Empty, yes, no, pending));
         }
 
         if (MeetsThreshold(team, voteItem, false))
@@ -173,9 +193,22 @@ public class TeamNameService
             await _context.SaveChangesAsync();
             
             // get it... not acceptable... haha!
-            return ResultOf<HttpStatusCode>.Success(HttpStatusCode.NotAcceptable, voteItem.ProposedName);
+            return ResultOf<TeamVoteCountResponse?>.Success(new(HttpStatusCode.NotAcceptable, voteItem.ProposedName, yes, no, pending));
+        }
+
+        if (IsStalemate(team, voteItem))
+        {
+            _context.UserTeamNameVotes.RemoveRange(voteItem.Votes);
+            _context.TeamNameVotes.Remove(voteItem);
+            await _context.SaveChangesAsync();
+
+            return ResultOf<TeamVoteCountResponse?>.Success(new(HttpStatusCode.Ambiguous, voteItem.ProposedName, yes, no, pending));
         }
         
-        return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);
+        return ResultOf<TeamVoteCountResponse?>.Success(new(HttpStatusCode.OK, 
+            string.Empty, 
+            yes, 
+            no,
+            pending));
     }
 }
