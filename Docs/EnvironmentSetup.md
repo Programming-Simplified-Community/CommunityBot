@@ -33,3 +33,9 @@ Right now, **MySql** is used for our database. Which docker takes care of. If yo
 
 # Misc
 Make sure you have [Git](https://git-scm.com/downloads) installed on your machine!
+
+# Discord Registration
+
+For local testing you need to register your own discord bot! https://discord.com/developers/applications
+
+Then follow the steps [here](settings.md) to set that token in a safe location.
