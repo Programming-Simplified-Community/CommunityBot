@@ -5,6 +5,9 @@ using Newtonsoft.Json.Linq;
 
 namespace ChallengeAssistant.DockerTypes;
 
+/// <summary>
+/// Container to assist with storing data from PyTest
+/// </summary>
 internal class PytestContainer
 {
     public List<double> Duration { get; } = new();
@@ -16,12 +19,20 @@ internal class PytestContainer
     public bool Passed => Total > 0 && Failed == 0;
 }
 
+/// <summary>
+/// Handles running Python code from our users
+/// </summary>
 public class PythonDockerTest : DockerTest
 {
     public PythonDockerTest(ILogger<DockerTest> logger, IConfiguration config) : base(logger, config)
     {
     }
 
+    /// <remarks>
+    /// This may later change, where we inject code into the docker file? We'll see.
+    /// </remarks>
+    /// <param name="userCode"></param>
+    /// <returns></returns>
     protected override async Task<string> CreateUserCodeFile(string userCode)
     {
         var filename = Guid.NewGuid() + ".py";
@@ -34,6 +45,10 @@ public class PythonDockerTest : DockerTest
         return filePath;
     }
 
+    /// <summary>
+    /// Parse our 
+    /// </summary>
+    /// <returns></returns>
     protected override async Task<ProgrammingChallengeReport?> ParseReport()
     {
         var files = Directory.GetFiles(AppStorage.ReportsPath);

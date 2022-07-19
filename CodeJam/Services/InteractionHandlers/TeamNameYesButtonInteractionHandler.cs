@@ -6,6 +6,10 @@ using DiscordHub;
 
 namespace CodeJam.Services.InteractionHandlers;
 
+/// <summary>
+/// This handler processes the request for when a team member wants to vote yes for
+/// suggested team name
+/// </summary>
 [DiscordInteractionHandlerName("Team Name Yes", Constants.TEAM_NAME_VOTE_YES_BUTTON_PREFIX)]
 public class TeamNameYesButtonInteractionHandler : IDiscordButtonHandler
 {

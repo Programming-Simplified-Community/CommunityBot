@@ -87,10 +87,7 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
             await Task.Delay(TimeSpan.FromSeconds(2));
         }
         
-        await ModifyOriginalResponseAsync(x =>
-        {
-            x.Content = "Complete";
-        });
+        await DeleteOriginalResponseAsync();
     }
 
     [SlashCommand("leaderboard", "view leaderboard")]

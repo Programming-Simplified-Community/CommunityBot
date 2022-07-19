@@ -25,7 +25,7 @@ public class TopicService
     /// <returns></returns>
     public async Task<List<Topic>> GetRegisterableTopics()
     {
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
 
         return await _context.CodeJamTopics
             .Where(x => now >= x.RegistrationStartOn && now <= x.RegistrationEndOn)

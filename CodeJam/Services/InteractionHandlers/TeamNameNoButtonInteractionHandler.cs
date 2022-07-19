@@ -6,6 +6,10 @@ using DiscordHub;
 
 namespace CodeJam.Services.InteractionHandlers;
 
+/// <summary>
+/// This handler processes the request for when a member wants to vote "no" on the
+/// suggested team name
+/// </summary>
 [DiscordInteractionHandlerName("Team Name No", Constants.TEAM_NAME_VOTE_NO_BUTTON_PREFIX)]
 public class TeamNameNoButtonInteractionHandler : IDiscordButtonHandler
 {

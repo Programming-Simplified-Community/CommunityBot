@@ -15,12 +15,12 @@ public class ActiveJamAutoCompleteProvider : AutocompleteHandler
 {
     private static SocialDbContext? Database { get; set; }
     private static List<Topic> _topics = new();
-    private static DateTime _nextUpdate = DateTime.Now.AddSeconds(-30);
+    private static DateTime _nextUpdate = DateTime.UtcNow.AddSeconds(-30);
     private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(30);
 
     protected virtual IQueryable<Topic> SearchTopics(string? text)
     {
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
 
         if (string.IsNullOrEmpty(text))
             return _topics
@@ -39,7 +39,7 @@ public class ActiveJamAutoCompleteProvider : AutocompleteHandler
         if (Database is null)
             Database = CodeJamBot.Provider.GetRequiredService<SocialDbContext>();
         
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
 
         if (now >= _nextUpdate)
         {

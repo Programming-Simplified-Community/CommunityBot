@@ -11,6 +11,9 @@ using Razor.Templating.Core;
 
 namespace ChallengeAssistant.Services;
 
+/// <summary>
+/// Background service which processes code-submissions
+/// </summary>
 public class CodeRunnerService : BackgroundService, ICodeRunner
 {
     private readonly ConcurrentQueue<UserSubmissionQueueItem> _submissionQueue = new();
@@ -24,6 +27,9 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
     private readonly int _maxConcurrentRunners;
     private ConcurrentDictionary<string, Task> _runners;
 
+    /// <summary>
+    /// Number of runners currently processing a request.
+    /// </summary>
     public int CurrentRunners => _runners?.Count ?? 0;
     
     public CodeRunnerService(
@@ -43,7 +49,7 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
 
         _runners = new();
     }
-
+    
     private async Task ProcessItem(Guid taskId, UserSubmissionQueueItem item, CancellationToken stoppingToken)
     {
         try
@@ -54,7 +60,8 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
                 item.Code);
 
             DockerTest dockerTest;
-
+            
+            // Spin up appropriate test based on language
             switch (item.Test.Language)
             {
                 case ProgrammingLanguage.Python:
@@ -65,9 +72,10 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
                 default:
                     throw new NotImplementedException(item.Test.Language.ToString());
             }
-
+            
+            // Execute test suite
             var results = await dockerTest.Start(item.Test, item.Code);
-
+            
             if (results is not null)
             {
                 var passing = results.TestResults.Count(x => x.Result == TestStatus.Pass);
@@ -76,6 +84,10 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
 
                 results.Points = passing;
                 
+                // If a report already exists, to save space, we'll stick with that
+                // Otherwise we'll make a new one
+                
+                // TODO: Make this support multiple languages.
                 var existingReport = await _context.ChallengeReports
                     .Include(x=>x.TestResults)
                     .FirstOrDefaultAsync(x =>
@@ -114,17 +126,16 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
                 }
 
                 var embedColor = Color.Red;
-
-                if (allPassing && total > 0)
-                    embedColor = Color.Green;
-                else if (total == 0)
-                    embedColor = Color.Magenta;
-
                 var sb = new StringBuilder();
+
                 if (allPassing && total > 0)
+                {
+                    embedColor = Color.Green;
                     sb.AppendLine($"Good job, {user.DiscordDisplayName}! All tests passed!");
+                }
                 else if (total == 0)
                 {
+                    embedColor = Color.Magenta;
                     sb.AppendLine("Appears no tests were executed. Please make sure you provided valid syntax!");
                 }
                 else
@@ -185,7 +196,6 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
                         $"{user.UserName}-test-results.html",
                         $"{discordUser.Mention}, here's a more detailed test report");
                 }
-
             }
             else
             {

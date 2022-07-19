@@ -11,6 +11,12 @@ namespace CodeJam;
 
 public static class ServiceCollectionExtensions
 {
+    /// <summary>
+    /// Add all services required for CodeJam platform to work
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
+    /// <returns></returns>
     public static IServiceCollection AddCodeJam(this IServiceCollection services, IConfiguration configuration)
     {
         return services

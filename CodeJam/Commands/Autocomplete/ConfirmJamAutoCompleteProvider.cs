@@ -17,7 +17,7 @@ public class ConfirmJamAutoCompleteProvider : AutocompleteHandler
 
     protected IQueryable<Topic> SearchTopics(string? text, string memberId, string guildId)
     {
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
 
         var queryable = (from req in Database.CodeJamRegistrations
                 join topic in Database.CodeJamTopics

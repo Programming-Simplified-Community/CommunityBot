@@ -46,7 +46,7 @@ public class TopicCommands : InteractionModuleBase<SocketInteractionContext>
         [Summary("end-day", "ending day")]
         int endDay)
     {
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         DateTime start = new(now.Year, (int)startMonth, startDay, 0, 0, 0);
         DateTime end = new(now.Year, (int)endMonth, endDay, 23, 59, 59);
 
@@ -92,7 +92,7 @@ public class TopicCommands : InteractionModuleBase<SocketInteractionContext>
         [Summary("end-day", "ending day")]
         int endDay)
     {
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         DateTime start = new(now.Year, (int)startMonth, startDay, 0, 0, 0);
         DateTime end = new(now.Year, (int)endMonth, endDay, 23, 59, 59);
 

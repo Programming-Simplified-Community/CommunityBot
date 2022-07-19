@@ -5,10 +5,24 @@ using Microsoft.Extensions.Logging;
 
 namespace Core.Validation;
 
+/// <summary>
+/// Response from our validator. 
+/// </summary>
+/// <param name="IsValid">Is the item valid or not</param>
+/// <param name="Errors">Errors, if applicable</param>
 public record ValidatorResponse(bool IsValid, List<string?> Errors);
 
+/// <summary>
+/// Helper class for validating objects within the application
+/// </summary>
 public static class Validator
 {
+    /// <summary>
+    /// Validate <paramref name="data"/> using DataAnnotations
+    /// </summary>
+    /// <param name="data"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
     public static ValidatorResponse Validate<T>(T? data)
     {
         if (data is null)

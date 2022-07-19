@@ -7,6 +7,12 @@ using Microsoft.Extensions.Options;
 
 namespace CodeJam.Services.InteractionHandlers;
 
+/// <summary>
+/// When a user is welcomed to the server, if a jam is currently accepting applications
+/// there will be a Join button to help direct them.
+///
+/// <p>This interaction handler processes this button's click event</p>
+/// </summary>
 [DiscordInteractionHandlerName("Join Code Jam", Constants.JOIN_CODE_JAM_BUTTON_PREFIX)]
 public class JoinCodeJamButtonInteractionHandler : IDiscordButtonHandler
 {

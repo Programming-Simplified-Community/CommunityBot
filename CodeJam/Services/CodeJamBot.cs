@@ -57,6 +57,7 @@ public class CodeJamBot : BackgroundService, IDiscordService
     private async Task<string?> CreateUserMentionFor(ulong guildId, ulong memberId) =>
         (await _client.GetUserAsync(memberId))?.Mention ?? string.Empty;
 
+    //TODO: Improve team creation workflow. 
     public async Task<TeamWorkflowCreateResponse?> CreateTeamSpace(TeamWorkflowCreate request)
     {
         IGuildChannel? categoryChannel = null;

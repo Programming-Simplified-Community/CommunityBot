@@ -2,8 +2,14 @@
 
 namespace Core.Renderer;
 
+/// <summary>
+/// Helper class to convert Markdown into HTML using MarkDig nuget package
+/// </summary>
 public static class Renderer
 {
+    /// <summary>
+    /// Pipeline that allows us to do various things in markdown!
+    /// </summary>
     private static MarkdownPipeline _pipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
         .UsePipeTables()
@@ -17,6 +23,11 @@ public static class Renderer
         .UseCustomContainers()
         .UseEmojiAndSmiley().Build();
     
+    /// <summary>
+    /// Convert <paramref name="markdownText"/> into html
+    /// </summary>
+    /// <param name="markdownText">Text to convert</param>
+    /// <returns>HTML version of <paramref name="markdownText"/></returns>
     public static string RenderMarkdownToHtml(this string markdownText)
     {
         
@@ -25,6 +36,19 @@ public static class Renderer
         
         var output = string.Empty;
         int codeBlockStart;
+        
+        /*
+            We are utilizing HighlightJs for rendering codeblocks in our templates.
+            The markdown renderer does not convert these for us unfortunately so
+            we must parse it ourselves.
+            
+            ```language
+            some awesome code goes in here
+            ```
+            
+            Based on the above format we need to go by ``` as our markers.
+            So long as there is a ``` in the file we have a codeblock!
+         */
         
         while ((codeBlockStart = markdownText.IndexOf("```")) > 0)
         {

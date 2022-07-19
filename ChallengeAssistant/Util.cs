@@ -12,12 +12,22 @@ public static class Util
     /// </summary>
     internal static Regex LastSegmentOfUrlRegex = new("[^/]+(?=/$|$)");
 
+    /// <summary>
+    /// If <paramref name="dirPath"/> does not exist, create it
+    /// </summary>
+    /// <param name="dirPath"></param>
     public static void EnsureDir(string dirPath)
     {
         if (!Directory.Exists(dirPath))
             Directory.CreateDirectory(dirPath);
     }
     
+    /// <summary>
+    /// Delete a directory's contents recursively.
+    /// <p>If <paramref name="filesOnly"/>, it will keep the folders... just empty</p>
+    /// </summary>
+    /// <param name="dirPath"></param>
+    /// <param name="filesOnly"></param>
     public static async Task DeleteDir(string dirPath, bool filesOnly=true)
     {
         if (filesOnly && Directory.Exists(dirPath))
@@ -29,7 +39,15 @@ public static class Util
         else
             await PS.Execute($"Remove-Item -Recurse -Force \"{dirPath}\"");
     }
-
+    
+    /// <summary>
+    /// Takes a <paramref name="language"/> and replaces each variable using "%VARNAME%" format with values from
+    /// <paramref name="variables"/>. AKA - each key in the dictionary must represent a variable name inside the template.
+    /// </summary>
+    /// <param name="language"></param>
+    /// <param name="variables"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException">When <paramref name="language"/> is not implemented</exception>
     public static async Task<string> CreateDockerFileFromTemplate(ProgrammingLanguage language,
         Dictionary<string, string> variables)
     {

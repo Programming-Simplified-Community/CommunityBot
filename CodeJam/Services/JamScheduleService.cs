@@ -6,6 +6,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CodeJam.Services;
 
+/// <summary>
+/// Background service which handles the events for sending jam confirmation messages
+/// and team creation
+/// </summary>
 public class JamScheduleService : BackgroundService
 {
     private readonly SocialDbContext _context;
@@ -62,7 +66,7 @@ public class JamScheduleService : BackgroundService
     /// </summary>
     private async Task CheckTopicsStarting()
     {
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
 
         var registrations = await (
             from reg in _context.CodeJamRegistrations
@@ -129,7 +133,7 @@ public class JamScheduleService : BackgroundService
     /// </summary>
     private async Task HandleConfirmationMessages()
     {
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
 
         var registrations = await (
             from reg in _context.CodeJamRegistrations
@@ -170,7 +174,7 @@ public class JamScheduleService : BackgroundService
                     await SendHourMessage(reg.Topic, reg.Registration, reg.User, hoursLeft);
                 
                 // update the registration value
-                reg.Registration.ReminderSentOn = DateTime.Now;
+                reg.Registration.ReminderSentOn = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
             }
         }
@@ -188,7 +192,7 @@ public class JamScheduleService : BackgroundService
     private async Task SendHourMessage(Topic topic, Registration registration, SocialUser user, int left)
     {
         // For hourly messages we want to make sure there is a period of no messaging...
-        if (registration.ReminderSentOn.HasValue && (DateTime.Now - registration.ReminderSentOn.Value).Hours <= 6)
+        if (registration.ReminderSentOn.HasValue && (DateTime.UtcNow - registration.ReminderSentOn.Value).Hours <= 6)
             return;
         
         _logger.LogInformation("Sending [Hour] Reminder to {User} for topic {Topic}", user.DiscordDisplayName, topic.Title);
@@ -198,14 +202,14 @@ public class JamScheduleService : BackgroundService
             left);
         await _discord.SendConfirmationMessage(registration, message);
 
-        registration.ReminderSentOn = DateTime.Now;
+        registration.ReminderSentOn = DateTime.UtcNow;
         await _context.SaveChangesAsync();
     }
 
     private async Task SendDayMessage(Topic topic, Registration registration, SocialUser user, int left)
     {
         // Need at least more than 1 day for daily one
-        if (registration.ReminderSentOn.HasValue && (DateTime.Now - registration.ReminderSentOn.Value).TotalDays < 1)
+        if (registration.ReminderSentOn.HasValue && (DateTime.UtcNow - registration.ReminderSentOn.Value).TotalDays < 1)
             return;
 
         _logger.LogInformation("Sending [Day] Reminder to {User} for topic {Topic}", user.DiscordDisplayName,

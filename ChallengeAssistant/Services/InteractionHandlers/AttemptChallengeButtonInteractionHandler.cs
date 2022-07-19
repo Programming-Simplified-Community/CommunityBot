@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ChallengeAssistant.Services.InteractionHandlers;
 
+/// <summary>
+/// Handles user-interactions for when they want to attempt a coding-challenge
+/// </summary>
 [DiscordInteractionHandlerName("Attempt Challenge", Constants.ATTEMPT_BUTTON_PREFIX)]
 public class AttemptChallengeButtonInteractionHandler : IDiscordButtonHandler
 {

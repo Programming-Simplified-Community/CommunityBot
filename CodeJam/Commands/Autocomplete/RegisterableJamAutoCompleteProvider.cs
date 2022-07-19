@@ -16,11 +16,11 @@ public class RegisterableJamAutoCompleteProvider : AutocompleteHandler
     protected static SocialDbContext? Database;
     protected static TimeSpan RefreshInterval = TimeSpan.FromSeconds(30);
     protected static List<Topic> Topics = new();
-    protected static DateTime NextUpdate = DateTime.Now.AddSeconds(-30);
+    protected static DateTime NextUpdate = DateTime.UtcNow.AddSeconds(-30);
     
     protected virtual IQueryable<Topic> SearchTopics(string? text)
     {
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
 
         if (string.IsNullOrEmpty(text))
             return Topics.Where(x => x.IsActive && now >= x.RegistrationStartOn && now <= x.RegistrationEndOn)
@@ -41,7 +41,7 @@ public class RegisterableJamAutoCompleteProvider : AutocompleteHandler
         if (Database is null)
             Database = CodeJamBot.Provider.GetRequiredService<SocialDbContext>();
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         if (now >= NextUpdate)
         {
             Topics = await Database.CodeJamTopics.ToListAsync();

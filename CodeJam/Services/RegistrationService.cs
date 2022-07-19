@@ -28,7 +28,7 @@ public class RegistrationService
     /// <returns></returns>
     public async Task<List<Topic>> ViewRegisterableTopics(DateTime? referenceTime = null)
     {
-        referenceTime ??= DateTime.Now;
+        referenceTime ??= DateTime.UtcNow;
 
         return await _context.CodeJamTopics.Where(x =>
             referenceTime >= x.RegistrationStartOn && referenceTime <= x.RegistrationEndOn && x.IsActive).ToListAsync();
@@ -63,7 +63,7 @@ public class RegistrationService
             return ResultOf<HttpStatusCode>.Error(string.Join("\n", validationResult.Errors));
         }
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
 
         var existingRegistration = await (
             from registration in _context.CodeJamRegistrations
@@ -162,7 +162,7 @@ public class RegistrationService
             return ResultOf<HttpStatusCode>.Error(errors);
         }
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
 
         var existing = await (
             from registration in _context.CodeJamRegistrations
@@ -190,7 +190,7 @@ public class RegistrationService
         
         #endregion
 
-        existing.ConfirmedOn = DateTime.Now;
+        existing.ConfirmedOn = DateTime.UtcNow;
         existing.ConfirmationValue = request.Confirm;
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -249,10 +249,10 @@ public class RegistrationService
             request.Topic);
 
         // IF we're within the registration period - this record will remain in the database
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         if (now >= existing.Topic.StartDateOn && now <= existing.Topic.EndDateOn)
         {
-            existing.Registration.AbandonedOn = DateTime.Now;
+            existing.Registration.AbandonedOn = DateTime.UtcNow;
         
             // If this jam has a withdraw point type assigned, deduct the appropriate points
             if (existing.Topic.PointType_WithdrawId is not null)

@@ -7,7 +7,7 @@ public class Registration
     /// <summary>
     /// Date/Time in which user registered
     /// </summary>
-    public DateTime RegisteredOn { get; set; } = DateTime.Now;
+    public DateTime RegisteredOn { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Date/Time in which reminder was sent

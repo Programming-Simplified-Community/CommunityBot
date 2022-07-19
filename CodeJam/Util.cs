@@ -94,13 +94,13 @@ public static class Util
             {
                 ExperienceLevel = SigmaLevel.Black,
                 IsSolo = false,
-                RegisteredOn = DateTime.Now.AddDays(-3),
+                RegisteredOn = DateTime.UtcNow.AddDays(-3),
                 TimezoneId = timezoneId,
                 TopicId = topicId,
                 DiscordUserId = "117744034247737353",
                 DiscordGuildId = "989689420695367690",
                 //ConfirmationValue = true,
-                //ConfirmedOn = DateTime.Now.AddDays(-1)
+                //ConfirmedOn = DateTime.UtcNow.AddDays(-1)
             });
             await context.SaveChangesAsync();
         }
@@ -120,7 +120,15 @@ public static class Util
             _ => Color.LightGrey
         };
     }
-
+    
+    /// <summary>
+    /// Helper method for generating a discord embed builder
+    /// </summary>
+    /// <param name="title"></param>
+    /// <param name="description"></param>
+    /// <param name="type"></param>
+    /// <param name="author"></param>
+    /// <returns></returns>
     public static EmbedBuilder Embed(string title, string description, MessageType type = MessageType.Pending,
         string author = "Code Jam Helper")
     {
@@ -131,6 +139,11 @@ public static class Util
             .WithAuthor(author);
     }
 
+    /// <summary>
+    /// Extract experience level from <paramref name="text"/>
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
     public static SigmaLevel GetExperienceLevel(string text)
     {
         return text.ToLower().Split(' ').First() switch

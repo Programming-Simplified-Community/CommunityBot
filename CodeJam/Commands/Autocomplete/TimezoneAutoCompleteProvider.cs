@@ -16,7 +16,7 @@ public class TimezoneAutoCompleteProvider : AutocompleteHandler
     private static SocialDbContext? _database;
     private static List<Timezone> _timezones = new();
     private static TimeSpan _refreshInterval = TimeSpan.FromMinutes(1);
-    private static DateTime _nextUpdate = DateTime.Now.AddSeconds(-30);
+    private static DateTime _nextUpdate = DateTime.UtcNow.AddSeconds(-30);
 
     private IQueryable<Timezone> Search(string? text)
     {
@@ -33,10 +33,10 @@ public class TimezoneAutoCompleteProvider : AutocompleteHandler
         if (_database is null)
             _database = CodeJamBot.Provider.GetRequiredService<SocialDbContext>();
 
-        if (DateTime.Now >= _nextUpdate)
+        if (DateTime.UtcNow >= _nextUpdate)
         {
             _timezones = await _database.CodeJamTimezones.ToListAsync();
-            _nextUpdate = DateTime.Now + _refreshInterval;
+            _nextUpdate = DateTime.UtcNow + _refreshInterval;
         }
 
         var response= Search(autocompleteInteraction.Data.Current?.Value?.ToString())

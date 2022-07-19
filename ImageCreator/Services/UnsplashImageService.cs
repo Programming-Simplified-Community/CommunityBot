@@ -19,7 +19,7 @@ public class UnsplashImageService : IImageService
             var result = _cache[query];
             
             // ensure we used up-to-date images from cache
-            if (result.DeleteAfter >= DateTime.Now)
+            if (result.DeleteAfter >= DateTime.UtcNow)
                 return result.Nodes;
 
             _cache.Remove(query);
@@ -37,7 +37,7 @@ public class UnsplashImageService : IImageService
         if (_cache.ContainsKey(query))
             _cache[query].Nodes.AddRange(images);
         else
-            _cache.Add(query, new(images, DateTime.Now.AddDays(1)));
+            _cache.Add(query, new(images, DateTime.UtcNow.AddDays(1)));
 
         return images;
     }

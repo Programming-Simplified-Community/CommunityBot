@@ -12,7 +12,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ChallengeAssistant.Services.InteractionHandlers;
 
-
+/// <summary>
+/// Handles user interaction with the modal window used to ingest user-code.
+/// </summary>
 [DiscordInteractionHandlerName("Submit Challenge", Constants.CHALLENGE_MODAL_PREFIX)]
 public class SubmitChallengeModalInteractionHandler : IDiscordModalHandler
 {

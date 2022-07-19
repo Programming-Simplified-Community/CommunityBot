@@ -3,14 +3,20 @@ using ChallengeAssistant.Requests;
 using Core.Validation;
 using Data;
 using Data.Challenges;
-using Data.CodeJam;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace ChallengeAssistant.Services;
 
+/// <summary>
+/// Item used to store data we want to display in our Leaderboard
+/// </summary>
+/// <param name="Username"></param>
+/// <param name="Attempts"></param>
+/// <param name="Points"></param>
+/// <param name="Duration"></param>
 public record LeaderboardEntry(string Username, int Attempts, int Points, double Duration);
+
 public class ChallengeService
 {
     private readonly ILogger<ChallengeService> _logger;
@@ -44,7 +50,7 @@ public class ChallengeService
                     Username = user.UserName
                 }
             ).ToListAsync(cancellationToken);
-
+        
         return query.GroupBy(x => x.Username)
             .Select(x =>
                 new LeaderboardEntry(x.Key, 

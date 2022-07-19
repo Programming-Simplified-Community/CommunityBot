@@ -20,7 +20,9 @@ public record TeamVoteCountResponse(HttpStatusCode StatusCode, string Message, i
     }
 }
 
-
+/// <summary>
+/// Handles the voting system for changing team name
+/// </summary>
 public class TeamNameService
 {
     private readonly ILogger<TeamNameService> _logger;

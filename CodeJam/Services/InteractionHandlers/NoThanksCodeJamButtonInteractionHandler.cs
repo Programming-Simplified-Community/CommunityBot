@@ -5,6 +5,12 @@ using DiscordHub;
 
 namespace CodeJam.Services.InteractionHandlers;
 
+/// <summary>
+/// When a user joins the server, if a jam is currently accepting applicants users will have
+/// a button to indicate if they want to join or not.
+///
+/// <p>This handler processes the request for "no thanks"</p>
+/// </summary>
 [DiscordInteractionHandlerName("No Thanks", Constants.NO_THANKS_JAM_BUTTON_PREFIX)]
 public class NoThanksCodeJamButtonInteractionHandler : IDiscordButtonHandler
 {

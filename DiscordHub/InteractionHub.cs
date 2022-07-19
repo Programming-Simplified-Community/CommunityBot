@@ -11,6 +11,9 @@ internal record ButtonHandlerInfo(string Name, IDiscordButtonHandler Handler);
 
 internal record ModalHandlerInfo(string Name, IDiscordModalHandler Handler);
 
+/// <summary>
+/// Centralized location for redirecting user interactions to appropriate handlers.
+/// </summary>
 public class InteractionHub
 {
     private readonly ILogger<InteractionHub> _logger;
@@ -34,9 +37,17 @@ public class InteractionHub
 
     void Initialize()
     {
+        /*
+            All handlers should be added into our DI pipeline. That means we can grab a list of 
+            said interface to find all handlers in our application.
+            
+            This avoids the "I didn't want that registered" mistake
+         */
         var buttonHandlers = _serviceProvider.GetServices<IDiscordButtonHandler>();
         var modalHandlers = _serviceProvider.GetServices<IDiscordModalHandler>();
-
+        
+        // We want to cache each handler by the "prefix" they are meant to handle.
+        // this prefix is what drives routing 
         foreach (var handler in buttonHandlers)
         {
             var attribute = handler.GetType().GetCustomAttribute<DiscordInteractionHandlerNameAttribute>();
@@ -88,6 +99,7 @@ public class InteractionHub
 
     private async Task ProcessButton(SocketMessageComponent arg)
     {
+        // Our hub requires custom IDs.
         if (string.IsNullOrEmpty(arg.Data.CustomId))
         {
             await arg.RespondAsync(ephemeral: true, text: "This component you interacted with has an invalid ID");
@@ -97,7 +109,7 @@ public class InteractionHub
         try
         {
             var prefix = arg.Data.CustomId.Split('_').First();
-
+            
             if (!_buttonHandlers.ContainsKey(prefix))
             {
                 await arg.RespondAsync("There was no interaction handler setup for this component", ephemeral: true);
@@ -105,11 +117,11 @@ public class InteractionHub
             }
 
             var response = await _buttonHandlers[prefix].Handler.HandleButton(arg);
-
+            
             var code = (int)response.StatusCode;
             var success = code is >= 200 and <= 299;
-
-            if (!success)
+            
+            if (!success || !arg.HasResponded)
             {
                 await arg.RespondAsync(embed: new EmbedBuilder()
                         .WithTitle("Error")
@@ -159,7 +171,7 @@ public class InteractionHub
             var code = (int)response.StatusCode;
             var success = code is >= 200 and <= 299;
 
-            if (!success)
+            if (!success || !modal.HasResponded)
             {
                 await modal.RespondAsync(embed: new EmbedBuilder()
                         .WithTitle("Error")

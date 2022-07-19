@@ -85,7 +85,7 @@ public class SubmissionService
             return ResultOf<HttpStatusCode>.Error(errors);
         }
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         var existingRecord = await (from register in _context.CodeJamRegistrations
             join topic in _context.CodeJamTopics
                 on register.TopicId equals topic.Id

@@ -8,6 +8,10 @@ using Microsoft.Extensions.Logging;
 
 namespace ChallengeAssistant.DockerTypes;
 
+/// <summary>
+/// Allows us to handle specific language-based tests. Handles creating user-container,
+/// and parsing report.
+/// </summary>
 public abstract class DockerTest
 {
     protected readonly ILogger<DockerTest> Logger;
