@@ -31,6 +31,8 @@ If you are testing, or adding to the Challenge Assistant service Docker **IS REQ
 Right now, **MySql** is used for our database. Which docker takes care of. If you aren't using docker, you will need to grab MySQL from their website: 
 [Download](https://dev.mysql.com/downloads/mysql/)
 
+Your connection string can be updated using the steps [here](settings.md), except the keyname would be `ConnectionStrings:Default`. You can reference `appsettings.json` to see how to format the connection string. Please reference the [database](database.md) doc on more details for db setup.
+
 # Misc
 Make sure you have [Git](https://git-scm.com/downloads) installed on your machine!
 
