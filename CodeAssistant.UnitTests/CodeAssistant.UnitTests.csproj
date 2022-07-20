@@ -18,6 +18,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\CodeAssistant\CodeAssistant.csproj" />
+      <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>

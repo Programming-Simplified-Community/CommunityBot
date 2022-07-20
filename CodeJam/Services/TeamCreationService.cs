@@ -1,10 +1,14 @@
 ﻿using CodeJam.Events;
 using CodeJam.Interfaces;
+using CodeJam.ViewModels;
+using Data;
 using Data.CodeJam;
+using Discord.WebSocket;
 using Infrastructure;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Namotion.Reflection;
 
 namespace CodeJam.Services;
 
@@ -14,13 +18,71 @@ public class TeamCreationService : ITeamCreationService
     private readonly IMediator _mediator;
     private readonly ILogger<TeamCreationService> _logger;
     private readonly SocialDbContext _context;
-    
-    public TeamCreationService(IDiscordService discord, ILogger<TeamCreationService> logger, SocialDbContext context, IMediator mediator)
+    private readonly DiscordSocketClient _client;
+    public TeamCreationService(DiscordSocketClient client, IDiscordService discord, ILogger<TeamCreationService> logger, SocialDbContext context, IMediator mediator)
     {
+        _client = client;
         _discord = discord;
         _logger = logger;
         _context = context;
         _mediator = mediator;
+    }
+
+    private async Task<string> GetAvatar(string userId)
+    {
+        var response = await _client.GetUserAsync(ulong.Parse(userId!));
+        return response.GetAvatarUrl();
+    }
+    
+    public async Task<IList<TeamView>> GenerateTeamSheet()
+    {
+        var results = await (from registration in _context.CodeJamRegistrations
+            join user in _context.Users
+                on registration.DiscordUserId equals user.DiscordUserId
+            join team in _context.CodeJamTeams
+                on registration.TeamId equals team.Id
+            select new
+            {
+                User = user,
+                TeamId = team.Id,
+                TeamName = team.Name
+            }).ToListAsync();
+        
+        var members = results.GroupBy(x=>x.TeamId)
+            .ToDictionary(x=>x.Key, x=>x.ToList());
+        
+        var teamIds = members.Keys.ToHashSet();
+        
+#pragma warning disable CS8714
+        // Null check is already performed in the where clause thus making it safe
+        // to use TeamID as a key
+        var submissions = await _context.CodeJamSubmissions
+            .Where(x => x.TeamId != null && teamIds.Contains(x.TeamId.Value))
+            .ToDictionaryAsync(x=>x.TeamId, x=>x);
+#pragma warning restore CS8714
+
+        Dictionary<int, Dictionary<string, string>> userCache = new();
+        Dictionary<int, string> teamNames = new();
+        
+        foreach (var user in results)
+        {
+            if (!teamNames.ContainsKey(user.TeamId))
+            {
+                teamNames.Add(user.TeamId, user.TeamName);
+                userCache.Add(user.TeamId, new());
+            }
+            
+            var avatar = await GetAvatar(user.User.DiscordUserId);
+            if(!userCache[user.TeamId].ContainsKey(user.User.UserName))
+                userCache[user.TeamId].Add(user.User.UserName, avatar);
+        }
+
+        return userCache.Select(x => new TeamView(teamNames[x.Key],
+                submissions.ContainsKey(x.Key) 
+                    ? submissions[x.Key] 
+                    : null,
+                userCache[x.Key]))
+            .ToList();
     }
 
     /// <summary>
