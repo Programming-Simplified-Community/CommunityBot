@@ -40,4 +40,19 @@ Make sure you have [Git](https://git-scm.com/downloads) installed on your machin
 
 For local testing you need to register your own discord bot! https://discord.com/developers/applications
 
+Be sure to enable `Members Intent`! 
+
 Then follow the steps [here](settings.md) to set that token in a safe location.
+
+Once you add the bot to a test server you will need to:
+
+Right Click --> Copy ID
+
+![image](https://user-images.githubusercontent.com/28987352/179986684-fcf6ad1c-89dc-4426-9832-f3e8f5449d10.png)
+
+Set your `CodeJamBot:Settings:PrimaryGuildId` to this value! 
+
+Additionally, you will need to setup the channel and Role IDs the same way. Haven't quite looked into pulling these things dynamically through Names instead of IDs. 
+
+
+
