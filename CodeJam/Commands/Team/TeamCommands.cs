@@ -1,7 +1,10 @@
-﻿using CodeJam.Services;
+﻿using System.Text;
+using CodeJam.Commands.Autocomplete;
+using CodeJam.Services;
 using Discord;
 using Discord.Interactions;
 using DiscordHub;
+using Razor.Templating.Core;
 
 namespace CodeJam.Commands.Team;
 
@@ -9,10 +12,27 @@ namespace CodeJam.Commands.Team;
 public class TeamCommands : InteractionModuleBase<SocketInteractionContext>
 {
     public ILogger<TeamCommands> Logger { get; set; }
-    public TeamNameService Service { get; set; }
+    public TeamNameService TeamNameService { get; set; }
+    public TeamCreationService TeamCreationService { get; set; }
 
     private readonly Emoji _thumbsUp = new ("👍");
     private readonly Emoji _thumbsDown = new ("👎");
+
+    [RequireUserPermission(GuildPermission.BanMembers)]
+    [SlashCommand("view-teams", "view the current team breakdowns and submissions")]
+    public async Task ViewTeams()
+    {
+        await RespondAsync("Processing", ephemeral: true);
+        var view = await TeamCreationService.GenerateTeamSheet();
+        var html = await RazorTemplateEngine.RenderAsync("~/Views/Shared/CodeJamTeams.cshtml", view);
+        using var reportStream = new MemoryStream();
+        var reportHtmlBytes = Encoding.ASCII.GetBytes(html);
+        reportStream.Write(reportHtmlBytes);
+        await reportStream.FlushAsync();
+        reportStream.Position = 0;
+        await Context.Channel.SendFileAsync(reportStream, "teams.html", "Team");
+        await DeleteOriginalResponseAsync();
+    }
     
     [RequireUserPermission(GuildPermission.ManageMessages)]
     [SlashCommand("change-name", "update team name")]
@@ -20,7 +40,7 @@ public class TeamCommands : InteractionModuleBase<SocketInteractionContext>
     {
         await RespondAsync(text: "processing");
         
-        var item = await Service.StartVote(Context.User.Id.ToString(), teamName);
+        var item = await TeamNameService.StartVote(Context.User.Id.ToString(), teamName);
         
         if (item is null)
         {
