@@ -21,7 +21,7 @@
             width: 3em;
             height: 3em;
             border-radius: 50%;
-            background: #009578;
+            background: black;
             display: inline-flex;
             align-items: center;
             justify-content: center;       
@@ -31,7 +31,7 @@
         .avatar::after{
             content: attr(data-label);
             font-family: "Readex Pro", sans-serif;
-            color: #ffffff;
+            color: black;
         }
     </style>
   </head>
@@ -53,7 +53,14 @@
                                         {
                                             <div class="mb-3">
                                                 <span>
-                                                    <img class="avatar" src="@member.Value"/>
+                                                    @if (!string.IsNullOrEmpty(member.Value))
+                                                    {
+                                                        <img class="avatar" src="@member.Value"/>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="avatar fab fa-discord"></i>
+                                                    }
                                                     @member.Key
                                                 </span>
                                             </div>    

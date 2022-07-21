@@ -41,6 +41,7 @@ public class TeamCreationService : ITeamCreationService
                 on registration.DiscordUserId equals user.DiscordUserId
             join team in _context.CodeJamTeams
                 on registration.TeamId equals team.Id
+            where registration.AbandonedOn == null
             select new
             {
                 User = user,
