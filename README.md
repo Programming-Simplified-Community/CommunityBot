@@ -1,3 +1,5 @@
+[Documentation](Docs/TOC.md)
+
 # CommunityBot
 
 This contains the various services being built for our community!
@@ -11,6 +13,7 @@ into flushing this service out.
 
 ## Api
 This is the entry point into our application. Our services are spooled up here and made available.
+
 
 -----
 
