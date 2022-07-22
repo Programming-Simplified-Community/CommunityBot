@@ -55,4 +55,10 @@ Set your `CodeJamBot:Settings:PrimaryGuildId` to this value!
 Additionally, you will need to setup the channel and Role IDs the same way. Haven't quite looked into pulling these things dynamically through Names instead of IDs. 
 
 
+# SSL
 
+For testing, there is an `ssl.sh` file at the project root directory `~/ssl/ssl.sh`. 
+With git installed, you can execute this file through `git bash`, aka `right click on the file` --> `open with git bash`. If you're on a non-linux system feel free to
+create a linux or mac safe version of this file.
+
+The associated projects that leverage SSL should automatically pull these files in

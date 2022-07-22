@@ -1,0 +1,68 @@
+﻿syntax = "proto3";
+
+package challenge_assistant;
+
+enum Language {
+  PYTHON = 0;
+  NODEJS = 1;
+}
+
+// This is called from the client
+// to start the process
+message SubmitChallengeRequest {
+  string username = 1;
+  string user_id = 2;
+  int32 challenge_id = 3;
+  Language attempted_language = 4;
+  string code = 5;
+}
+
+// This type represents the processed user submission
+message ChallengeReport {
+  string username = 1;
+  string user_id = 2;
+  int32 challenge_id = 3;
+  int32 points = 4;
+  double duration = 5;
+  repeated TestResult TestResults = 6;
+}
+
+// Individual tests from challenge report
+message TestResult {
+  int32 challenge_report_id = 1;
+  string name = 2;
+  optional double duration = 3;
+  int32 total_runs = 4;
+  int32 total_fails = 5;
+  optional string incoming_values = 6;
+  optional string assertion_message = 7;
+  
+  enum TestStatus {
+    PASS = 0;
+    FAIL = 1;
+  }
+  
+  TestStatus Result = 8;
+}
+
+message Challenge {
+  int32 id = 1;
+  string title = 2;
+  string question = 3;
+  string explanation = 4;
+  optional string tip = 5;
+  bool is_timed = 6;
+  repeated Language supported_languages = 7;
+}
+
+// Response object for submitting a challenge
+message ChallengeReportResponse {
+  optional string error_message = 1;
+  optional ChallengeReport report = 2;
+}
+
+message EmptyRequest {}
+service ChallengeService {
+  rpc SubmitChallenge(SubmitChallengeRequest) returns (ChallengeReportResponse);
+  rpc GetChallenges(EmptyRequest) returns (stream Challenge);
+}

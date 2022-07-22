@@ -6,6 +6,7 @@ using DiscordHub;
 using Razor.Templating.Core;
 
 namespace ChallengeAssistant.Commands;
+using ChallengeService = ChallengeAssistant.Services.ChallengeService;
 
 [Group("challenge", "various challenge-based commands")]
 public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
