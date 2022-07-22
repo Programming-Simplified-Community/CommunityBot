@@ -122,16 +122,12 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
                 .WithDescription(sb.ToString())
                 .WithFooter($"Requested by: {Context.User.Username}")
                 .WithColor(Color.Orange);
-            
-            await ModifyOriginalResponseAsync(message =>
-            {
-                message.Content = string.Empty;
-                message.Embed = e.Build();
-            });
+
+            await Context.Channel.SendMessageAsync(embed: e.Build());
+            await DeleteOriginalResponseAsync();
         }
         catch (Exception ex)
         {
-            await ModifyOriginalResponseAsync(message => message.Content = "Failed to fetch");
             _logger.LogError("Error occurred while fetching leaderboard: {Exception}", ex);
         }
     }
