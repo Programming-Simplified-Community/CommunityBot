@@ -22,7 +22,6 @@ var host = Host.CreateDefaultBuilder()
         services.AddOptions();
         services.AddInfrastructure(context.Configuration);
         services.AddCodeJam(context.Configuration);
-        services.AddCodeRunner(context.Configuration);
         services.AddDiscordInteractionHub();
     }).Build();
 

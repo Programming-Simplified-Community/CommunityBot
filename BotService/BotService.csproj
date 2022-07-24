@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>dotnet-BotService-9E8FEEF7-F657-4550-A0F9-E9FC2A911EB8</UserSecretsId>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Google.Protobuf" Version="3.21.3" />
+        <PackageReference Include="Grpc.Core" Version="2.46.3" />
+        <PackageReference Include="Grpc.Core.Api" Version="2.47.0" />
+        <PackageReference Include="Grpc.Net.Client" Version="2.47.0" />
+        <PackageReference Include="Grpc.Net.ClientFactory" Version="2.47.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.47.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Protobuf Include="../*.proto" OutputDir="%(RelativePath)Contracts/" GrpcServices="Client" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Contracts" />
+    </ItemGroup>
+</Project>
