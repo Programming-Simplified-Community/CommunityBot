@@ -11,12 +11,14 @@ namespace ChallengeAssistant.Commands;
 public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
 {
     private readonly ILogger<ChallengeCommands> _logger;
+    private readonly string _website;
     private readonly ChallengeService _service;
     
-    public ChallengeCommands(ILogger<ChallengeCommands> logger, ChallengeService service)
+    public ChallengeCommands(ILogger<ChallengeCommands> logger, ChallengeService service, IConfiguration config)
     {
         _logger = logger;
         _service = service;
+        _website = config["CodeRunner:Website"];
     }
 
     [RequireUserPermission(GuildPermission.Administrator)]
@@ -47,16 +49,11 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
 
         foreach (var challenge in challenges)
         {
-            var challengeHtml = await RazorTemplateEngine.RenderAsync("~/Views/Shared/Challenge.cshtml", challenge);
-            using var reportStream = new MemoryStream();
-            var reportHtmlBytes = Encoding.ASCII.GetBytes(challengeHtml);
-            reportStream.Write(reportHtmlBytes);
-            await reportStream.FlushAsync();
-            reportStream.Position = 0;
-            
-            
             // The button shall be used to create a modal linked to a specific challenge.
             var comp = new ComponentBuilder();
+            var embed = new EmbedBuilder()
+                .WithTitle(challenge.Title)
+                .WithDescription(challenge.Description);
 
             int styleIndex = 0;
             foreach (var test in challenge.Tests)
@@ -76,14 +73,16 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
                 styleIndex++;
                 styleIndex %= 5;
             }
-            
-            await Context.Channel.SendFileAsync(
-                reportStream, 
-                filename: $"{challenge.Title}.html",
-                text: $"{challenge.Title}",
-                components: comp.Build()
-            );
-                
+
+            comp.WithButton(new ButtonBuilder()
+                .WithLabel("View Challenge")
+                .WithStyle(ButtonStyle.Link)
+                .WithUrl($"{_website}/Challenge?{challenge.QueryParameter}"));
+
+            await Context.Channel.SendMessageAsync(
+                embed: embed.Build(),
+                components: comp.Build());
+
             await Task.Delay(TimeSpan.FromSeconds(2));
         }
         

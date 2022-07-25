@@ -1,4 +1,6 @@
-﻿namespace Data.Challenges;
+﻿using System.Text.Json.Serialization;
+
+namespace Data.Challenges;
 
 public class ProgrammingChallengeReport
 {
@@ -8,12 +10,16 @@ public class ProgrammingChallengeReport
     /// Foreign Key to <see cref="ProgrammingChallenge"/>
     /// </summary>
     public int ProgrammingChallengeId { get; set; }
+    
+    [JsonIgnore]
     public ProgrammingChallenge ProgrammingChallenge { get; set; } = default!;
 
     /// <summary>
     /// Foreign key to <see cref="SocialUser"/>
     /// </summary>
     public string UserId { get; set; } = default!;
+    
+    [JsonIgnore]
     public SocialUser User { get; set; } = default!;
     
     /// <summary>
