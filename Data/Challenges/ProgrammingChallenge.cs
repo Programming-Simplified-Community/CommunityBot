@@ -8,22 +8,22 @@ public enum ProgrammingLanguage
 public class ProgrammingChallenge
 {
     public int Id { get; set; }
+    
+    /// <summary>
+    /// Title which appears on discord
+    /// </summary>
     public string Title { get; set; } = default!;
-    
+
     /// <summary>
-    /// Question to pose to the user
+    /// Description that shall appear on discord
     /// </summary>
-    public string Question { get; set; } = default!;
-    
+    public string Description { get; set; } = default!;
+
     /// <summary>
-    /// Bit more explanation to provide to the user
+    /// The value sent to our Challenger website that's associated
+    /// with this challenge record
     /// </summary>
-    public string Explanation { get; set; } = default!;
-    
-    /// <summary>
-    /// Optional tip to give to user on how to solve it
-    /// </summary>
-    public string? Tip { get; set; } = default!;
+    public string QueryParameter { get; set; } = default!;
     
     /// <summary>
     /// Associated tests that go with this challenge, if any

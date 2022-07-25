@@ -58,7 +58,7 @@ public class PythonDockerTest : DockerTest
             Logger.LogWarning("Could not locate any report files at {Path}", AppStorage.ReportsPath);
             return null;
         }
-
+        
         var results = await ParsePytest(await File.ReadAllTextAsync(files.First()));
 
         if (results is null)
@@ -66,7 +66,7 @@ public class PythonDockerTest : DockerTest
             Logger.LogWarning("Something went wrong while trying to parse the report file...\n\t{file}", files.First());
             return null;
         }
-
+        
         var report = new ProgrammingChallengeReport
         {
             ProgrammingChallengeId = Test.ProgrammingChallengeId
@@ -106,6 +106,34 @@ public class PythonDockerTest : DockerTest
     {
         await base.Cleanup();
         await Util.DeleteDir(AppStorage.ScriptsPath);
+    }
+
+    public static async Task<ProgrammingChallengeReport?> ParseReport(PytestReport? pytestReport, int challengeId=1)
+    {
+        if (pytestReport is null)
+            return null;
+
+        var report = new ProgrammingChallengeReport
+        {
+            ProgrammingChallengeId = challengeId
+        };
+
+        foreach (var test in pytestReport.Tests)
+        {
+            report.TestResults.Add(new()
+            {
+                Name = test.TestName,
+                ProgrammingChallengeReportId = challengeId,
+                Result = test.Outcome == PytestOutcome.Passed ? TestStatus.Pass : TestStatus.Fail,
+                Duration = test.CallDuration,
+                AssertionMessage = test.AssertionMessage,
+                IncomingValues = test.IncomingValues,
+                TotalFails = test.Failed,
+                TotalRuns = test.Total
+            });
+        }
+
+        return report;
     }
     
     public static Task<PytestReport?> ParsePytest(string jsonText)
