@@ -6,6 +6,7 @@ using Data.Challenges;
 using Discord;
 using Discord.Interactions;
 using DiscordHub;
+using Razor.Templating.Core;
 
 namespace ChallengeAssistant.Commands;
 
@@ -158,25 +159,15 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
 
         try
         {
-            var top = entries.Take(20);
-
-            var sb = new StringBuilder();
-            sb.AppendLine("```yml");
-
-            sb.AppendLine(string.Format("| {0,15} | {1,15} | {2,15} |", "Username", "Points", "Attempts"));
-            
-            foreach (var item in top)
-                sb.AppendLine(string.Format("| {0,15} | {1,15} | {2,15} |", item.Username, item.Points, item.Attempts));
-            
-            sb.AppendLine("```");
-            
-            var e = new EmbedBuilder()
-                .WithTitle($"Leaderboard")
-                .WithDescription(sb.ToString())
-                .WithFooter($"Requested by: {Context.User.Username}")
-                .WithColor(Color.Orange);
-
-            await Context.Channel.SendMessageAsync(embed: e.Build());
+            var html = await RazorTemplateEngine.RenderAsync("~/Views/Shared/Leaderboard.cshtml", entries);
+            using var reportStream = new MemoryStream();
+            var reportHtmlBytes = Encoding.ASCII.GetBytes(html);
+            reportStream.Write(reportHtmlBytes);
+            await reportStream.FlushAsync();
+            reportStream.Position = 0;
+            await Context.Channel.SendFileAsync(reportStream,
+                $"leaderboard.html",
+                $"{Context.User.Mention}, here's the current leaderboard!!!");
             await DeleteOriginalResponseAsync();
         }
         catch (Exception ex)

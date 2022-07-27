@@ -52,7 +52,7 @@ public class ProgrammingTestResult
     /// </summary>
     public string Name { get; set; } = default!;
 
-    public double? Duration { get; set; }
+    public string? Duration { get; set; }
 
     /// <summary>
     /// Total number of runs for this method/test case

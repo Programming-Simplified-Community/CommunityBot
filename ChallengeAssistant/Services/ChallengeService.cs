@@ -3,6 +3,7 @@ using ChallengeAssistant.Models;
 using ChallengeAssistant.Requests;
 using Core.Validation;
 using Data.Challenges;
+using Discord.WebSocket;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,19 +16,21 @@ namespace ChallengeAssistant.Services;
 /// <param name="Attempts"></param>
 /// <param name="Points"></param>
 /// <param name="Duration"></param>
-public record LeaderboardEntry(string Username, int Attempts, int Points, double Duration);
+public record LeaderboardEntry(string Username, string Avatar, int Attempts, int Points, double Duration);
 
 public class ChallengeService
 {
     private readonly ILogger<ChallengeService> _logger;
     private readonly SocialDbContext _context;
     private readonly IServiceProvider _serviceProvider;
+    private readonly DiscordSocketClient _client;
     
-    public ChallengeService(ILogger<ChallengeService> logger, SocialDbContext context, IServiceProvider serviceProvider)
+    public ChallengeService(ILogger<ChallengeService> logger, SocialDbContext context, IServiceProvider serviceProvider, DiscordSocketClient client)
     {
         _logger = logger;
         _context = context;
         _serviceProvider = serviceProvider;
+        _client = client;
     }
     
     /// <summary>
@@ -45,7 +48,9 @@ public class ChallengeService
         if (user is null)
             return HttpStatusCode.NotFound;
 
-        var challenge = await _context.ProgrammingChallenges.FirstOrDefaultAsync(x => x.Title == challengeTitle);
+        var challenge = await _context.ProgrammingChallenges
+            .Include(x=>x.Tests)
+            .FirstOrDefaultAsync(x => x.Title == challengeTitle);
 
         if (challenge is null)
             return HttpStatusCode.NotFound;
@@ -112,16 +117,26 @@ public class ChallengeService
                 select new
                 {
                     UserId = user.Id,
-                    Points = report.Points,
-                    Duration = report.Duration,
+                    user.DiscordUserId,
+                    report.Points,
+                    report.Duration,
                     Report = report,
-                    Username = user.UserName
+                    Username = user.UserName,
+                    Avatar = string.Empty
                 }
             ).ToListAsync(cancellationToken);
-        
-        return query.GroupBy(x => x.Username)
+
+            var avatars = query.GroupBy(x => x.Username)
+                .Select(x => x.FirstOrDefault())
+                .ToDictionary(x => x.DiscordUserId, x => x.Avatar);
+
+            foreach (var user in avatars)
+                avatars[user.Key] = (await _client.GetUserAsync(ulong.Parse(user.Key))).GetAvatarUrl();
+            
+            return query.GroupBy(x => x.Username)
             .Select(x =>
-                new LeaderboardEntry(x.Key, 
+                new LeaderboardEntry(x.Key,
+                    avatars[x.First().DiscordUserId],
                     submissions[x.First().UserId], 
                     x.Sum(y => y.Points),
                     x.Sum(y => double.Parse(y.Duration)))
