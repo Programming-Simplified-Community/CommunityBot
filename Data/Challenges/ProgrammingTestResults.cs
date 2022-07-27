@@ -30,7 +30,7 @@ public class ProgrammingChallengeReport
     /// <summary>
     /// Total time it took to execute these tests
     /// </summary>
-    public double Duration { get; set; }
+    public string Duration { get; set; }
 
     /// <summary>
     /// Test results associated with this report
@@ -52,7 +52,7 @@ public class ProgrammingTestResult
     /// </summary>
     public string Name { get; set; } = default!;
 
-    public double? Duration { get; set; }
+    public string? Duration { get; set; }
 
     /// <summary>
     /// Total number of runs for this method/test case

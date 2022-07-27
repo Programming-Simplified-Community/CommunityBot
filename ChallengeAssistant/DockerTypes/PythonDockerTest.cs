@@ -1,4 +1,5 @@
-﻿using ChallengeAssistant.Reports;
+﻿using System.Globalization;
+using ChallengeAssistant.Reports;
 using Core.Storage;
 using Data.Challenges;
 using Newtonsoft.Json.Linq;
@@ -69,7 +70,8 @@ public class PythonDockerTest : DockerTest
         
         var report = new ProgrammingChallengeReport
         {
-            ProgrammingChallengeId = Test.ProgrammingChallengeId
+            ProgrammingChallengeId = Test.ProgrammingChallengeId,
+            Duration = results.Duration.ToString()
         };
 
         foreach (var test in results.Tests)
@@ -79,7 +81,7 @@ public class PythonDockerTest : DockerTest
                 Name = test.TestName,
                 ProgrammingChallengeReportId = Test.ProgrammingChallengeId,
                 Result = test.Outcome == PytestOutcome.Passed ? TestStatus.Pass : TestStatus.Fail,
-                Duration = test.CallDuration,
+                Duration = test.CallDuration.ToString(CultureInfo.InvariantCulture),
                 AssertionMessage = test.AssertionMessage,
                 IncomingValues = test.IncomingValues,
                 TotalFails = test.Failed,
@@ -115,7 +117,8 @@ public class PythonDockerTest : DockerTest
 
         var report = new ProgrammingChallengeReport
         {
-            ProgrammingChallengeId = challengeId
+            ProgrammingChallengeId = challengeId,
+            Duration = pytestReport.Duration.ToString(CultureInfo.InvariantCulture)
         };
 
         foreach (var test in pytestReport.Tests)
@@ -125,7 +128,7 @@ public class PythonDockerTest : DockerTest
                 Name = test.TestName,
                 ProgrammingChallengeReportId = challengeId,
                 Result = test.Outcome == PytestOutcome.Passed ? TestStatus.Pass : TestStatus.Fail,
-                Duration = test.CallDuration,
+                Duration = test.CallDuration.ToString(CultureInfo.InvariantCulture),
                 AssertionMessage = test.AssertionMessage,
                 IncomingValues = test.IncomingValues,
                 TotalFails = test.Failed,
@@ -222,7 +225,8 @@ public class PythonDockerTest : DockerTest
                     Failed = container.Failed,
                     Total = container.Total
                 });
-            
+
+            report.Duration = (decimal) report.Tests.Sum(x => x.CallDuration);
             return Task.FromResult<PytestReport?>(report);
         }
         catch (Exception ex)

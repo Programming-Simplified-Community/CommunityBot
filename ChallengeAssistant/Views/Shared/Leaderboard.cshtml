@@ -1,0 +1,80 @@
+﻿@model List<ChallengeAssistant.Services.LeaderboardEntry>
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Challengers Leaderboard</title>
+    <script src="https://kit.fontawesome.com/09b9c96735.js" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/androidstudio.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+            .avatar {
+                font-size: 16px;
+                width: 3em;
+                height: 3em;
+                border-radius: 50%;
+                background: #009578;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;       
+                vertical-align: middle;     
+            }
+    
+            .avatar::after{
+                content: attr(data-label);
+                font-family: "Readex Pro", sans-serif;
+                color: #ffffff;
+            }
+        </style>
+  </head>
+  <body class="bg-dark text-white">
+    <div class="container-fluid">
+        <div class="row">
+            <main class="col-12 px-md-4">
+                <h3 class="text-center mt-3">Leaderboard</h3>
+                <div class="d-flex justify-content-between flex-wrap flex-md align-items-center pt-3 pb-2 mb-3 mt-5">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Name</th>
+                                <th>Points</th>
+                                <th>Attempts</th>
+                                <th>Duration</th>
+                            </tr>                                
+                        </thead>
+                        <tbody>
+                            @for(var i = 0; i < Model.Count; i++)
+                            {
+                                var entry = Model[i];
+                                <tr>
+                                    <td>@(i+1).</td>
+                                    <td>
+                                        <span>
+                                            @if (!string.IsNullOrEmpty(entry.Avatar))
+                                            {
+                                                <img class="avatar" src="@entry.Avatar"/>
+                                            }
+                                            @entry.Username
+                                        </span>
+                                    </td>
+                                    <td>@entry.Points</td>
+                                    <td>@entry.Attempts</td>
+                                    <td>@entry.Duration</td>
+                                </tr>    
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+  </body>
+</html>

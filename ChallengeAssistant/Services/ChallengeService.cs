@@ -1,8 +1,9 @@
 ﻿using System.Net;
+using ChallengeAssistant.Models;
 using ChallengeAssistant.Requests;
 using Core.Validation;
-using Data;
 using Data.Challenges;
+using Discord.WebSocket;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,17 +16,89 @@ namespace ChallengeAssistant.Services;
 /// <param name="Attempts"></param>
 /// <param name="Points"></param>
 /// <param name="Duration"></param>
-public record LeaderboardEntry(string Username, int Attempts, int Points, double Duration);
+public record LeaderboardEntry(string Username, string Avatar, int Attempts, int Points, double Duration);
 
 public class ChallengeService
 {
     private readonly ILogger<ChallengeService> _logger;
     private readonly SocialDbContext _context;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly DiscordSocketClient _client;
     
-    public ChallengeService(ILogger<ChallengeService> logger, SocialDbContext context)
+    public ChallengeService(ILogger<ChallengeService> logger, SocialDbContext context, IServiceProvider serviceProvider, DiscordSocketClient client)
     {
         _logger = logger;
         _context = context;
+        _serviceProvider = serviceProvider;
+        _client = client;
+    }
+    
+    /// <summary>
+    /// Attempt to rerun a user's submission without having the user required to resubmit their code. Also doesn't impact their number of attempts
+    /// because this is done by an administrator, not the user
+    /// </summary>
+    /// <param name="discordId">ID of the user whose submission we want to rerun</param>
+    /// <param name="challengeTitle">Title of challenge we want to search by</param>
+    /// <param name="language">The language in which the user submitted for</param>
+    /// <returns>StatusCode indicating level of success</returns>
+    public async Task<HttpStatusCode> RerunUserSubmission(string discordId, string challengeTitle, ProgrammingLanguage language)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.DiscordUserId == discordId);
+
+        if (user is null)
+            return HttpStatusCode.NotFound;
+
+        var challenge = await _context.ProgrammingChallenges
+            .Include(x=>x.Tests)
+            .FirstOrDefaultAsync(x => x.Title == challengeTitle);
+
+        if (challenge is null)
+            return HttpStatusCode.NotFound;
+
+        var submission = await _context.ProgrammingChallengeSubmissions.FirstOrDefaultAsync(x => x.UserId == user.Id &&
+            x.ProgrammingChallengeId == challenge.Id &&
+            x.SubmittedLanguage == language);
+
+        if (submission is null)
+            return HttpStatusCode.NotFound;
+        
+        var runner = _serviceProvider.GetRequiredService<ICodeRunner>();
+        UserSubmissionQueueItem item = new(challenge.Tests.First(x=>x.Language == language), submission, submission.UserSubmission);
+        await runner.Enqueue(item);
+        return HttpStatusCode.OK;
+    }
+    
+    /// <summary>
+    /// Reduce a user's number of attempts by <paramref name="reduceBy"/> amount
+    /// </summary>
+    /// <param name="discordUserId">User who we want to help out</param>
+    /// <param name="reduceBy">Amount in which we want to reduce by</param>
+    /// <param name="challengeTitle">Title in which we are reducing attempts for</param>
+    /// <param name="language">Filters the submission by language (can have multiple language attempts...)</param>
+    /// <returns></returns>
+    public async Task<HttpStatusCode> ReduceUserAttemptsBy(string discordUserId, int reduceBy, string challengeTitle, ProgrammingLanguage language)
+    {
+        var challenge = await _context.ProgrammingChallenges.FirstOrDefaultAsync(x => x.Title == challengeTitle);
+
+        if (challenge is null)
+            return HttpStatusCode.BadRequest;
+        
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.DiscordUserId == discordUserId);
+
+        if (user is null)
+            return HttpStatusCode.BadRequest;
+
+        var submission = await _context.ProgrammingChallengeSubmissions.FirstOrDefaultAsync(x => x.UserId == user.Id &&
+            x.ProgrammingChallengeId == challenge.Id &&
+            x.SubmittedLanguage == language);
+
+        if (submission is null)
+            return HttpStatusCode.NotFound;
+
+        submission.Attempt -= Math.Max(submission.Attempt - reduceBy, 0);
+        await _context.SaveChangesAsync();
+
+        return HttpStatusCode.OK;
     }
 
     /// <summary>
@@ -44,19 +117,29 @@ public class ChallengeService
                 select new
                 {
                     UserId = user.Id,
-                    Points = report.Points,
-                    Duration = report.Duration,
+                    user.DiscordUserId,
+                    report.Points,
+                    report.Duration,
                     Report = report,
-                    Username = user.UserName
+                    Username = user.UserName,
+                    Avatar = string.Empty
                 }
             ).ToListAsync(cancellationToken);
-        
-        return query.GroupBy(x => x.Username)
+
+            var avatars = query.GroupBy(x => x.Username)
+                .Select(x => x.FirstOrDefault())
+                .ToDictionary(x => x.DiscordUserId, x => x.Avatar);
+
+            foreach (var user in avatars)
+                avatars[user.Key] = (await _client.GetUserAsync(ulong.Parse(user.Key))).GetAvatarUrl();
+            
+            return query.GroupBy(x => x.Username)
             .Select(x =>
-                new LeaderboardEntry(x.Key, 
+                new LeaderboardEntry(x.Key,
+                    avatars[x.First().DiscordUserId],
                     submissions[x.First().UserId], 
                     x.Sum(y => y.Points),
-                    x.Sum(y => y.Duration))
+                    x.Sum(y => double.Parse(y.Duration)))
             )
             .OrderByDescending(x => x.Points)
             .ThenBy(x=>x.Attempts)
@@ -139,74 +222,67 @@ public class ChallengeService
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    public async Task<ResultOf<HttpStatusCode>> Submit(SubmitProgrammingChallengeRequest request)
+    public async Task<ResultOf<int>> Submit(SubmitProgrammingChallengeRequest request)
     {
-        #region Validation
-
-        var validationResult = Validator.Validate(request);
-
-        if (!validationResult.IsValid)
+        try
         {
-            var errors = string.Join(Environment.NewLine, validationResult.Errors);
-            _logger.LogWarning("Invalid data was provided to {Name}: {Errors}", nameof(Submit), errors);
-            return ResultOf<HttpStatusCode>.Error(errors);
-        }
+            var runner = _serviceProvider.GetRequiredService<ICodeRunner>();
+            
+            // If the user does not already exist in our system we'll add them!
+            var user = await _context.GetOrAddUser(request.DiscordUsername, request.DiscordUserId);
 
-        var challengeItemTask =
-            _context.ProgrammingChallenges.FirstOrDefaultAsync(x => x.Id == request.ProgrammingChallengeId);
-        var userItemTask = _context.Users.FirstOrDefaultAsync(x => x.DiscordUserId == request.DiscordUserId);
-
-        await Task.WhenAll(challengeItemTask, userItemTask);
-        
-        if(challengeItemTask.Result is null)
-            return ResultOf<HttpStatusCode>.NotFound("Could not locate challenge");
-
-        ProgrammingChallengeSubmission? submission = null;
-
-        var userId = userItemTask.Result?.Id ?? string.Empty;
-        
-        if (userItemTask.Result is not null)
-        {
-            submission = await _context.ProgrammingChallengeSubmissions.FirstOrDefaultAsync(x =>
-                x.ProgrammingChallengeId == request.ProgrammingChallengeId && x.UserId == userItemTask.Result.Id);
-        }
-        else
-        {
-            var user = new SocialUser
+            var challenge = await _context.ProgrammingChallenges
+                .Include(x => x.Tests)
+                .FirstOrDefaultAsync(x => x.Id == request.ProgrammingChallengeId);
+            
+            // Ensure the challenge is one we actually have in store
+            if (challenge is null)
             {
-                DiscordUserId = request.DiscordUserId,
-                UserName = request.DiscordUsername,
-                NormalizedUserName = request.DiscordUsername.ToUpper(),
-                Email = "changeme@gmail.com",
-                DiscordDisplayName = request.DiscordUsername
-            };
+                _logger.LogError("Was unable to locate challenge with Id {Id} for user {Username}",
+                    request.ProgrammingChallengeId,
+                    request.DiscordUsername);
+                return ResultOf<int>.NotFound("Could not locate challenge");
+            }
 
-            _context.Users.Add(user);
+            var existingSubmission = await _context.ProgrammingChallengeSubmissions
+                .FirstOrDefaultAsync(x => x.UserId == user.Id && 
+                                          x.ProgrammingChallengeId == challenge.Id &&
+                                          x.SubmittedLanguage == request.Language);
+            
+            /*
+                We don't need a billion submission records for the SAME language + challenge for a user. 
+                Just update existing records when applicable to conserve DB space.
+             */
+            
+            if (existingSubmission is not null)
+            {
+                existingSubmission.UserSubmission = request.Code;
+                existingSubmission.Attempt++;
+                existingSubmission.SubmittedOn = DateTime.UtcNow;
+            }
+            else
+            {
+                existingSubmission =new ProgrammingChallengeSubmission
+                {
+                    UserSubmission = request.Code,
+                    SubmittedLanguage = request.Language,
+                    ProgrammingChallengeId = challenge.Id,
+                    UserId = user.Id
+                };
+                
+                _context.ProgrammingChallengeSubmissions.Add(existingSubmission);
+            }
+
             await _context.SaveChangesAsync();
-
-            userId = user.Id; // update our cached id
+            
+            UserSubmissionQueueItem item = new(challenge.Tests.First(x=>x.Language == request.Language), existingSubmission, request.Code);
+            await runner.Enqueue(item);
+            return ResultOf<int>.Success(runner.PendingSubmissions);
         }
-        
-        #endregion
-
-        if (submission is null)
+        catch (Exception ex)
         {
-            submission = new()
-            {
-                UserId = userId,
-                ProgrammingChallengeId = request.ProgrammingChallengeId,
-                UserSubmission = request.Code
-            };
-
-            _context.ProgrammingChallengeSubmissions.Add(submission);
+            _logger.LogError("Error occurred while processing Modal: {Exception}", ex);
+            return ResultOf<int>.Error("Something went wrong: " + ex.Message);
         }
-        else
-        {
-            submission.UserSubmission = request.Code;
-            submission.SubmittedOn = DateTime.UtcNow;
-        }            
-        
-        await _context.SaveChangesAsync();
-        return ResultOf<HttpStatusCode>.Success(HttpStatusCode.OK);
     }
 }

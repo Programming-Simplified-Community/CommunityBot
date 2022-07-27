@@ -97,6 +97,7 @@ public class CodeRunnerService : BackgroundService, ICodeRunner
                 if (existingReport is not null)
                 {
                     existingReport.Points = passing;
+                    existingReport.Duration = results.Duration ?? "0";
                     _context.TestResults.RemoveRange(existingReport.TestResults);
                     var testResults = results.TestResults;
                     _context.TestResults.AddRange(results.TestResults);
