@@ -30,7 +30,7 @@ public class ProgrammingChallengeReport
     /// <summary>
     /// Total time it took to execute these tests
     /// </summary>
-    public double Duration { get; set; }
+    public string Duration { get; set; }
 
     /// <summary>
     /// Test results associated with this report

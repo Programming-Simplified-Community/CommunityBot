@@ -35,4 +35,9 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Grpc\ChallengerServiceImpl.cs" />
+      <Compile Remove="Contracts\ChallengeService.cs" />
+    </ItemGroup>
+
 </Project>

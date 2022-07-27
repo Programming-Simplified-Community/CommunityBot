@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Data.Challenges;
 
 namespace ChallengeAssistant.Requests;
 
@@ -29,4 +30,6 @@ public class SubmitProgrammingChallengeRequest
     /// </summary>
     [Required]
     public string Code { get; set; }
+
+    public ProgrammingLanguage Language { get; set; } = ProgrammingLanguage.Python;
 }

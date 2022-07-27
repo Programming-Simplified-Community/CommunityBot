@@ -51,8 +51,9 @@ namespace Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<double>("Duration")
-                        .HasColumnType("double");
+                    b.Property<string>("Duration")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<int>("Points")
                         .HasColumnType("int");
