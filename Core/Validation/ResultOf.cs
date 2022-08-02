@@ -19,3 +19,20 @@ public record ResultOf<T>(T? Result, string? Message, HttpStatusCode StatusCode)
 
     public static ResultOf<T> Success(T result, string message) => new(result, message, HttpStatusCode.OK);
 }
+
+public record ResultOf(string? Message, HttpStatusCode StatusCode)
+{
+    public static ResultOf Success() => new(null, HttpStatusCode.OK);
+    public static ResultOf Success(HttpStatusCode statusCode) => new(null, statusCode);
+    public static ResultOf NotFound() => new(null, HttpStatusCode.NotFound);
+    public static ResultOf Error(string? message, HttpStatusCode statusCode) => new(message, statusCode);
+
+    public bool IsSuccess
+    {
+        get
+        {
+            var code = (int)StatusCode;
+            return code is >= 200 and <= 299;
+        }
+    }
+}

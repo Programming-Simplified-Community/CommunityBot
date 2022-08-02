@@ -1,6 +1,6 @@
 ﻿namespace Data.CodeJam;
 
-public class Submission
+public class Submission : IEntityWithTypedId<int>
 {
     public int Id { get; set; }
 

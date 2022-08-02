@@ -2,7 +2,7 @@
 
 namespace Data;
 
-public class SocialUser : IdentityUser
+public class SocialUser : IdentityUser, IEntityWithTypedId<string>
 {
     public string? DiscordUserId { get; set; }
     public string? DiscordDisplayName { get; set; }

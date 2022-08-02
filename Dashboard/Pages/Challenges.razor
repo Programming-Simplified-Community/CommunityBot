@@ -1,0 +1,40 @@
+﻿@using Data.Challenges
+@inherits Dashboard.Components.EntityOverviewComponent<Data.Challenges.ProgrammingChallenge, int>
+@page "/Challenges"
+@inject IDialogService _dialog
+
+<MudTable T="ProgrammingChallenge" Items="Items"
+          Hover="true"
+          Striped="true"
+          Elevation="3"
+          Virtualize="true">
+    <HeaderContent>
+        <MudTh>Title</MudTh>
+        <MudTh>Description</MudTh>
+        <MudTh>Is Timed</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Title</MudTd>
+        <MudTd>@context.Description</MudTd>
+        <MudTd>@(context.IsTimed ? "Yes" : "No")</MudTd>
+        <MudTd>
+            <MudButton Color="Color.Primary" OnClick="@(()=>Edit(context))">
+                <MudIconButton Icon="@Icons.Filled.Edit"/>
+                Edit
+            </MudButton>
+            <MudButton Color="Color.Error" OnClick="@(()=>Delete(context.Id))">
+                <MudIconButton Icon="@Icons.Filled.Delete"/>
+                Delete
+            </MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+
+    async Task Edit(ProgrammingChallenge model)
+    {
+                
+    }
+}

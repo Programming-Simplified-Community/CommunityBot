@@ -1,6 +1,6 @@
 ﻿namespace Data.CodeJam;
 
-public class Requirement
+public class Requirement : IEntityWithTypedId<int>
 {
     public int Id { get; set; }
     public int TopicId { get; set; }

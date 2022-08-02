@@ -1,13 +1,19 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using Dashboard.Data;
+using Dashboard.Services;
+using Data.Challenges;
+using Infrastructure;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddMudServices();
+
+builder.Services.AddScoped<IBasicCrudService<ProgrammingChallenge, int>, ChallengeService>();
+builder.Services.AddScoped<IBasicCrudService<ProgrammingTest, int>, BasicCrudService<ProgrammingTest, int>>();
+builder.Services.AddScoped<IBasicCrudService<ProgrammingChallengeReport, int>, BasicCrudService<ProgrammingChallengeReport, int>>();
 
 var app = builder.Build();
 

@@ -2,7 +2,7 @@
 
 namespace Data.Challenges;
 
-public class ProgrammingChallengeReport
+public class ProgrammingChallengeReport : IEntityWithTypedId<int>
 {
     public int Id { get; set; }
 

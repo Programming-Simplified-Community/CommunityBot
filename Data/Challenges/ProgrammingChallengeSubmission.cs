@@ -1,6 +1,6 @@
 ﻿namespace Data.Challenges;
 
-public class ProgrammingChallengeSubmission
+public class ProgrammingChallengeSubmission : IEntityWithTypedId<int>
 {
     public int Id { get; set; }
 

@@ -2,7 +2,7 @@
 
 namespace Data.CodeJam;
 
-public class Topic
+public class Topic : IEntityWithTypedId<int>
 {
     /// <summary>
     /// Primary key

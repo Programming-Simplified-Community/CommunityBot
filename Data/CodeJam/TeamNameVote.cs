@@ -1,6 +1,6 @@
 ﻿namespace Data.CodeJam;
 
-public class TeamNameVote
+public class TeamNameVote : IEntityWithTypedId<int>
 {
     public int Id { get; set; }
     

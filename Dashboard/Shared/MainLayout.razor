@@ -1,20 +1,21 @@
 ﻿@inherits LayoutComponentBase
 
 <MudThemeProvider IsDarkMode="true"/>
-<MudDialogProvider 
-    CloseButton="true"
-    DisableBackdropClick="true"
-    Position="DialogPosition.Center"
-    FullWidth="true"
-    CloseOnEscapeKey="true"/>
-<MudSnackbarProvider />
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+
+<PageTitle>Dashboard</PageTitle>
 
 <MudLayout>
-    <MudAppBar>
+    <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        Code Jam Dashboard
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
     </MudAppBar>
-    <MudDrawer @bind-Open="@_drawerOpen">
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h5" Class="mt-1">Dashboard</MudText>
+        </MudDrawerHeader>
         <NavMenu/>
     </MudDrawer>
     <MudMainContent>

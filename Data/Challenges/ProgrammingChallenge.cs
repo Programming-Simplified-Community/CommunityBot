@@ -5,7 +5,7 @@ public enum ProgrammingLanguage
     Python
 }
 
-public class ProgrammingChallenge
+public class ProgrammingChallenge : IEntityWithTypedId<int>
 {
     public int Id { get; set; }
     
@@ -36,7 +36,7 @@ public class ProgrammingChallenge
     public bool IsTimed { get; set; } = false;
 }
 
-public class ProgrammingTest
+public class ProgrammingTest : IEntityWithTypedId<int>
 {
     public int Id { get; set; }
     
