@@ -44,11 +44,11 @@ public class ProgrammingTest : IEntityWithTypedId<int>
     /// Foreign key to <see cref="ProgrammingChallenge"/> 
     /// </summary>
     public int ProgrammingChallengeId { get; set; }
-    
+
     /// <summary>
     /// Optional amount of time to specify. If a test takes more than specified amount of time - it will shut down. Otherwise, no timeout
     /// </summary>
-    public int? TimeoutInMinutes;
+    public int? TimeoutInMinutes { get; set; }
 
     /// <summary>
     /// Language the user can utilize for solving the challenge.

@@ -1,0 +1,30 @@
+﻿@using Dashboard.Utility
+@using InputType = Dashboard.Utility.InputType
+@inherits Dashboard.Components.EditorComponent
+
+@foreach (var propInfo in Properties)
+{
+    var id = propInfo.Key;
+    var type = EditorWizard.GetInputTypeForProperty(propInfo.Value.Property.PropertyType);
+
+    switch (type)
+    {
+        case InputType.Text:
+            <MudText @bind-Value=""/>
+            break;
+    }
+}
+
+@code {
+
+    [Parameter]
+    public Type ModelType { get; set; }
+    
+    
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        InitializeProperties(ModelType);
+    }
+
+}
