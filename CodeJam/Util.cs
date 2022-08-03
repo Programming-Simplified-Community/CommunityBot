@@ -19,6 +19,12 @@ public static class Util
 {
     public static async Task InitializeDb(SocialDbContext context)
     {
+        string[] channelNames = { };
+        int one = 2;
+        int two = 3;
+        
+        int requiredBatches = (int)Math.Ceiling((double)channelNames.Length / one);
+        
         if (!context.CodeJamTopics.Any())
         {
             Console.WriteLine("Creating topic");

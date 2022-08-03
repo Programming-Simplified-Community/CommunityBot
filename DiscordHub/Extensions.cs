@@ -5,6 +5,11 @@ namespace DiscordHub;
 
 public static class Extensions
 {
+    /// <summary>
+    /// Adds <see cref="InteractionHub"/> into Dependency Injection pipeline
+    /// </summary>
+    /// <param name="services"></param>
+    /// <returns>Chainable reference to <paramref name="services"/></returns>
     public static IServiceCollection AddDiscordInteractionHub(this IServiceCollection services)
     {
         services.AddSingleton<InteractionHub>();

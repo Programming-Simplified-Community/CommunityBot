@@ -1,6 +1,6 @@
 ﻿namespace Data.CodeJam;
 
-public class Registration
+public class Registration : IEntityWithTypedId<int>
 {
     public int Id { get; set; }
 

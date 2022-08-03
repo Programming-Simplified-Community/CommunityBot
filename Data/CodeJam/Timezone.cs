@@ -1,6 +1,6 @@
 ﻿namespace Data.CodeJam;
 
-public class Timezone
+public class Timezone : IEntityWithTypedId<int>
 {
     public int Id { get; set; }
 

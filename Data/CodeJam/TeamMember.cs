@@ -1,6 +1,6 @@
 ﻿namespace Data.CodeJam;
 
-public class TeamMember
+public class TeamMember : IEntityWithTypedId<int>
 {
     /// <summary>
     /// Primary Key

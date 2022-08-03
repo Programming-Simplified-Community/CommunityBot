@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 namespace DiscordHub;
 
 internal record ButtonHandlerInfo(string Name, IDiscordButtonHandler Handler);
-
 internal record ModalHandlerInfo(string Name, IDiscordModalHandler Handler);
 
 /// <summary>

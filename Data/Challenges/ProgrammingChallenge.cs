@@ -5,7 +5,7 @@ public enum ProgrammingLanguage
     Python
 }
 
-public class ProgrammingChallenge
+public class ProgrammingChallenge : IEntityWithTypedId<int>
 {
     public int Id { get; set; }
     
@@ -36,7 +36,7 @@ public class ProgrammingChallenge
     public bool IsTimed { get; set; } = false;
 }
 
-public class ProgrammingTest
+public class ProgrammingTest : IEntityWithTypedId<int>
 {
     public int Id { get; set; }
     
@@ -44,11 +44,11 @@ public class ProgrammingTest
     /// Foreign key to <see cref="ProgrammingChallenge"/> 
     /// </summary>
     public int ProgrammingChallengeId { get; set; }
-    
+
     /// <summary>
     /// Optional amount of time to specify. If a test takes more than specified amount of time - it will shut down. Otherwise, no timeout
     /// </summary>
-    public int? TimeoutInMinutes;
+    public int? TimeoutInMinutes { get; set; }
 
     /// <summary>
     /// Language the user can utilize for solving the challenge.

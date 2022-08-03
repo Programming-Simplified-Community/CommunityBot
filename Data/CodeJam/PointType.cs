@@ -1,6 +1,6 @@
 ﻿namespace Data.CodeJam;
 
-public class PointType
+public class PointType : IEntityWithTypedId<int>
 {
     public int Id { get; set; }
     

@@ -2,7 +2,7 @@
 
 namespace Data.CodeJam;
 
-public class Team
+public class Team : IEntityWithTypedId<int>
 {
     public int Id { get; set; }
 

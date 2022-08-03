@@ -1,0 +1,17 @@
+﻿<Markdown @bind-Value="@Markdown" />
+
+<MudIconButton Icon="@Icons.Material.Filled.Save" 
+               Color="Color.Success" 
+               Title="Save" 
+               Size="Size.Medium"
+               OnClick="@(async ()=> await OnSaveClicked.InvokeAsync(Markdown))"/>
+
+@code {
+
+    [Parameter]
+    public string Markdown { get; set; }
+    
+    [Parameter]
+    public EventCallback<string> OnSaveClicked { get; set; }
+    
+}
