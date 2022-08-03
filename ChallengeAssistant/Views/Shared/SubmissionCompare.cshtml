@@ -1,0 +1,135 @@
+﻿@model ChallengeAssistant.Models.SubmissionCompareViewModel
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Compare Submissions</title>
+    <script src="https://kit.fontawesome.com/09b9c96735.js" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/androidstudio.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+    <script defer>hljs.highlightAll();</script>
+  </head>
+  <body class="bg-dark text-white">
+    <div class="container-fluid">
+        <div class="row">
+            <main class="col-md-12 ms-sm-auto col-lg-12 px-md-4">
+                @{
+                    var mySubmissionTabs = Model.MySubmissions.Keys.Select(x => $"{x}").ToArray();
+                }
+                <ul class="nav nav-tabs" id="my-submissions-tab" role="tablist">
+                    @foreach (var tabName in mySubmissionTabs)
+                    {
+                        var isFirst = tabName == mySubmissionTabs.FirstOrDefault();
+                        
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link @(isFirst ? "active" : "")"
+                                    id="my-submission-@tabName-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#my-submission-@tabName-pane"
+                                    type="button"
+                                    role="tab"
+                                    aria-controls="my-submission-@tabName-pane"
+                                    aria-selected="@isFirst">@tabName
+                            </button>
+                        </li>
+                    }
+                </ul>
+                <div class="tab-content" id="my-submissions-tab-content">
+                    @{
+                        var index = 0;
+                    }
+                    @foreach (var submission in Model.MySubmissions)
+                    {
+                        var id = $"my-submission-{submission.Key}-pane";
+                        var labeledBy = $"my-submission-{submission.Key}-tab";
+                        var isActive = index == 0;
+                        
+                        <div class="tab-pane fade @(isActive ? "show active" : "")"
+                             id="@id"
+                             role="tabpanel"
+                             aria-labelledby="@labeledBy"
+                             tabindex="@index">
+                            <div class="row">
+                                <div class="col-md-6 col-sm-12">
+                                    <h4>Your Submission</h4>
+                                    <pre><code class="language-@submission.Value.Language.ToString().ToLower()">@submission.Value.Submission</code></pre>
+                                </div>
+                                <div class="col-md-6 col-sm-12">
+                                    @{
+                                        if (!Model.UserSubmissions.ContainsKey(submission.Key))
+                                        {
+                                            <h4>No one else has a submission for this yet</h4>
+                                            continue;
+                                        }
+
+                                        var mainCompareTabId = $"{submission.Key}-compare-tab";
+                                        var userSubmissionTabs = Model.UserSubmissions[submission.Key].Select(x => x.Username).ToArray();
+                                        <ul class="nav nav-tabs"
+                                            id="@mainCompareTabId"
+                                            role="tablist">
+                                            @foreach (var otherSubmissionTabName in userSubmissionTabs)
+                                            {
+                                                isActive = otherSubmissionTabName == userSubmissionTabs.FirstOrDefault();
+                                                var baseId = $"{submission.Key}-compare-{otherSubmissionTabName}"
+                                                    .Replace(" ", "");
+                                                var tabId = baseId + "-tab";
+                                                var contentId = baseId + "-pane";
+                                                
+                                                <li class="nav-item"
+                                                    role="presentation">
+                                                    <button class="nav-link @(isActive ? "active" : "")"
+                                                            id="@tabId"
+                                                            data-bs-toggle="tab"
+                                                            data-bs-target="#@contentId"
+                                                            aria-selected="@isActive"
+                                                            aria-controls="@contentId">
+                                                        @otherSubmissionTabName
+                                                    </button>
+                                                </li>
+                                            }
+                                        </ul>
+                                        <div class="tab-content"
+                                             id="@submission.Key}-compare-tab-content">
+                                            @{
+                                                var compareIndex = 0;
+                                            }
+                                            
+                                            @foreach (var userSubmission in Model.UserSubmissions[submission.Key])
+                                            {
+                                                isActive = userSubmission.Username == userSubmissionTabs.FirstOrDefault();
+                                                var baseId = $"{submission.Key}-compare-{userSubmission.Username}"
+                                                    .Replace(" ", "");
+                                                var tabId = baseId + "-tab";
+                                                var contentId = baseId + "-pane";
+                                                
+                                                <div class="tab-pane fade @(isActive ? "show active" : "")"
+                                                     id="@contentId"
+                                                     role="tabpanel"
+                                                     aria-labelledby="@tabId"
+                                                     tabindex="@compareIndex">
+                                                    <pre><code class="language-@userSubmission.Language.ToString().ToLower()">@userSubmission.Submission</code></pre>
+                                                </div>
+                                                
+                                                compareIndex++;
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        index++;
+                    }
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+  </body>
+</html>
