@@ -32,7 +32,57 @@ public class ChallengeService
         _serviceProvider = serviceProvider;
         _client = client;
     }
-    
+
+    public async Task<SubmissionCompareViewModel?> CompareMySubmissions(string discordId, ProgrammingLanguage language)
+    {
+        var callerUser = await _context.Users.FirstOrDefaultAsync(x => x.DiscordUserId == discordId);
+        
+        if (callerUser is null)
+            return null;
+        
+        var query = await (from submission in _context.ProgrammingChallengeSubmissions
+                join user in _context.Users
+                    on submission.UserId equals user.Id
+                join challenge in _context.ProgrammingChallenges
+                    on submission.ProgrammingChallengeId equals challenge.Id
+                where submission.SubmittedLanguage == language
+                select new
+                {
+                    Username = user.UserName,
+                    DiscordId = user.DiscordUserId,
+                    challenge.Title,
+                    submission.UserSubmission
+                })
+            .ToListAsync();
+
+        var mySubmissions = query.Where(x => x.DiscordId == discordId)
+            .ToDictionary(x => x.Title, x => new MySubmission(x.UserSubmission, language));
+
+        // We require users to have a submission
+        if (!mySubmissions.Any())
+            return null;
+
+        var myKeys = mySubmissions.Keys.ToHashSet();
+        var otherSubmissions = query.Where(x => x.DiscordId != discordId && myKeys.Contains(x.Title))
+            .GroupBy(x => x.Title)
+            .ToDictionary(x => x.Key, x => x.ToList());
+
+        Dictionary<string, List<UserSubmission>> subs = new();
+        foreach (var title in otherSubmissions.Keys)
+        {
+            subs.Add(title, new());
+
+            foreach (var item in otherSubmissions[title])
+                subs[title].Add(new(item.Username, item.UserSubmission, language));
+        }
+
+        return new SubmissionCompareViewModel
+        {
+            MySubmissions = mySubmissions,
+            UserSubmissions = subs
+        };
+    }
+
     /// <summary>
     /// Attempt to rerun a user's submission without having the user required to resubmit their code. Also doesn't impact their number of attempts
     /// because this is done by an administrator, not the user

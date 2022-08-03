@@ -5,6 +5,7 @@ using ChallengeAssistant.Services;
 using Data.Challenges;
 using Discord;
 using Discord.Interactions;
+using Discord.WebSocket;
 using DiscordHub;
 using Razor.Templating.Core;
 
@@ -22,6 +23,60 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
         _logger = logger;
         _service = service;
         _website = config["CodeRunner:Website"];
+    }
+
+    [SlashCommand("compare", "compare your submissions with others!")]
+    public async Task Compare(ProgrammingLanguage language)
+    {
+        var result = await _service.CompareMySubmissions(Context.User.Id.ToString(), language);
+
+        if (result is null)
+        {
+            await RespondAsync(ephemeral: true, 
+                embed: new EmbedBuilder()
+                    .WithTitle("Oops")
+                    .WithColor(Color.Red)
+                    .WithDescription("Appears you don't have any submissions").Build());
+            return;
+        }
+
+        try
+        {
+            var channel = Context.Channel as SocketTextChannel;
+            
+            if (channel is null)
+            {
+                await RespondAsync(ephemeral: true,
+                    embed: new EmbedBuilder()
+                        .WithColor(Color.Red)
+                        .WithTitle("OOPS")
+                        .WithDescription("Ran into an issue creating thread").Build());
+                return;
+            }
+
+            var threadName = $"{Context.User.Username}-Rabbit-Hole";
+            var thread = channel.Threads.FirstOrDefault(x => x.Name == threadName) ?? await channel.CreateThreadAsync(threadName);
+        
+            var htmlResult = await RazorTemplateEngine.RenderAsync("~/Views/Shared/SubmissionCompare.cshtml", result);
+            using var reportStream = new MemoryStream();
+            var reportHtmlBytes = Encoding.ASCII.GetBytes(htmlResult);
+            reportStream.Write(reportHtmlBytes);
+            await reportStream.FlushAsync();
+            reportStream.Position = 0;
+            await thread.SendFileAsync(reportStream,
+                $"{Context.User.Username}-comparison-{DateTime.UtcNow:g}.html",
+                $"{Context.User.Mention}, dive into the rabbit hole! Awaaayyyy!!!!!");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Something went wrong while rendering submission compare page. {Error}", ex);
+            await RespondAsync(ephemeral: true,
+                embed: new EmbedBuilder()
+                    .WithTitle("Oops")
+                    .WithColor(Color.Red)
+                    .WithDescription("Something went wrong while rendering page.").Build());
+        }
+        
     }
 
     [RequireUserPermission(GuildPermission.Administrator)]
