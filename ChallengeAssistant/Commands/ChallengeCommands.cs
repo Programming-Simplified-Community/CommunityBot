@@ -25,9 +25,90 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
         _website = config["CodeRunner:Website"];
     }
 
+    [SlashCommand("display-challenge", "can manually re-display a challenge")]
+    [RequireUserPermission(GuildPermission.Administrator)]
+    public async Task DisplayChallenge([Autocomplete(typeof(ProgrammingChallengeAutoCompleteProvider))] string title)
+    {
+        var challenge = await _service.FindChallenge(title);
+
+        if (challenge is null)
+        {
+            await RespondAsync(ephemeral: true,
+                embed: new EmbedBuilder()
+                    .WithColor(Color.Red)
+                    .WithTitle("Oops")
+                    .WithDescription("Was unable to locate challenge with title: " + title)
+                    .Build());
+            return;
+        }
+
+        try
+        {
+
+            // The button shall be used to create a modal linked to a specific challenge.
+            var comp = new ComponentBuilder();
+            var embed = new EmbedBuilder()
+                .WithTitle(challenge.Title)
+                .WithDescription(challenge.Description);
+
+            var styleIndex = 0;
+            foreach (var test in challenge.Tests)
+            {
+                comp.WithButton(new ButtonBuilder()
+                    .WithCustomId(string.Format(Constants.ATTEMPT_BUTTON_NAME_FORMAT, test.Language.ToString(),
+                        challenge.Id))
+                    .WithLabel(test.Language.ToString())
+                    .WithStyle(styleIndex switch
+                    {
+                        1 => ButtonStyle.Danger,
+                        2 => ButtonStyle.Link,
+                        3 => ButtonStyle.Secondary,
+                        4 => ButtonStyle.Primary,
+                        _ => ButtonStyle.Success,
+                    }));
+                styleIndex++;
+                styleIndex %= 5;
+            }
+
+            comp.WithButton(new ButtonBuilder()
+                .WithLabel("View Challenge")
+                .WithStyle(ButtonStyle.Link)
+                .WithUrl($"{_website}/Challenge?{challenge.QueryParameter}"));
+
+            await Context.Channel.SendMessageAsync(embed: embed.Build(),
+                components: comp.Build());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("An error occurred while trying to display challenge: {Title}. {Error}",
+                title,
+                ex);
+            await RespondAsync(ephemeral: true,
+                embed: new EmbedBuilder()
+                    .WithTitle("Error")
+                    .WithDescription(ex.Message)
+                    .WithColor(Color.Red)
+                    .Build());
+        }
+    }
+    
     [SlashCommand("compare", "compare your submissions with others!")]
     public async Task Compare(ProgrammingLanguage language)
     {
+        _logger.LogInformation("{Usernamme} requested to compare their submissions with others for {Language}",
+            Context.User.Username,
+            language);
+        
+        if (Context.Channel is IThreadChannel)
+        {
+            await RespondAsync(ephemeral: true, embed: new EmbedBuilder()
+                .WithColor(Color.Red)
+                .WithTitle("Oops")
+                .WithDescription("This command will generate a thread. You cannot have thread-ception going on here")
+                .Build());
+            return;
+        }
+        
         var result = await _service.CompareMySubmissions(Context.User.Id.ToString(), language);
 
         if (result is null)
@@ -165,7 +246,7 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
                 .WithTitle(challenge.Title)
                 .WithDescription(challenge.Description);
 
-            int styleIndex = 0;
+            var styleIndex = 0;
             foreach (var test in challenge.Tests)
             {
                 comp.WithButton(new ButtonBuilder()
