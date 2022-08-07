@@ -41,7 +41,9 @@ public class SubmitChallengeModalInteractionHandler : IDiscordModalHandler
                 Code = components.First(x => x.CustomId == "code").Value,
                 Language = challengeInfo.Value.Language,
                 DiscordUsername = modal.User.Username,
-                DiscordUserId = modal.User.Id.ToString()
+                DiscordUserId = modal.User.Id.ToString(),
+                DiscordChannelId = modal.Channel.Id.ToString(),
+                DiscordGuildId = modal.GuildId.ToString()!
             });
 
             if (response.StatusCode != HttpStatusCode.OK)

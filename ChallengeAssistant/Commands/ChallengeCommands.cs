@@ -137,8 +137,8 @@ public class ChallengeCommands : InteractionModuleBase<SocketInteractionContext>
 
             var threadName = $"{Context.User.Username}-Rabbit-Hole";
             var thread = channel.Threads.FirstOrDefault(x => x.Name == threadName) ?? await channel.CreateThreadAsync(threadName);
-        
             var htmlResult = await RazorTemplateEngine.RenderAsync("~/Views/Shared/SubmissionCompare.cshtml", result);
+            await RespondAsync(ephemeral: true, text: "Generating notes...");
             using var reportStream = new MemoryStream();
             var reportHtmlBytes = Encoding.ASCII.GetBytes(htmlResult);
             reportStream.Write(reportHtmlBytes);
