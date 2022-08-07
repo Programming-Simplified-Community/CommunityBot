@@ -13,7 +13,13 @@ public class SubmitProgrammingChallengeRequest
     /// </summary>
     [Required]
     public string DiscordUserId { get; set; }
-    
+
+    [Required] 
+    public string DiscordChannelId { get; set; }
+
+    [Required] 
+    public string DiscordGuildId { get; set; }
+
     /// <summary>
     /// Discord username of person submitting
     /// </summary>

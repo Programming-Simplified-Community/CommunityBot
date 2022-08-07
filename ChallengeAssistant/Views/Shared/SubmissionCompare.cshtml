@@ -23,15 +23,17 @@
                     @foreach (var tabName in mySubmissionTabs)
                     {
                         var isFirst = tabName == mySubmissionTabs.FirstOrDefault();
-                        
+                        var baseId = $"my-submission-{tabName}"
+                            .Replace(" ", "");
+                        var tabId = baseId + "-tab";
+                        var contentId = baseId + "-pane";
+                                        
                         <li class="nav-item" role="presentation">
                             <button class="nav-link @(isFirst ? "active" : "")"
-                                    id="my-submission-@tabName-tab"
+                                    id="@tabId"
                                     data-bs-toggle="tab"
-                                    data-bs-target="#my-submission-@tabName-pane"
-                                    type="button"
-                                    role="tab"
-                                    aria-controls="my-submission-@tabName-pane"
+                                    data-bs-target="#@contentId"
+                                    aria-controls="@contentId"
                                     aria-selected="@isFirst">@tabName
                             </button>
                         </li>
@@ -43,14 +45,16 @@
                     }
                     @foreach (var submission in Model.MySubmissions)
                     {
-                        var id = $"my-submission-{submission.Key}-pane";
-                        var labeledBy = $"my-submission-{submission.Key}-tab";
+                        var contentBaseId = $"my-submission-{submission.Key}"
+                            .Replace(" ", "");
+                        var contentTabId = $"{contentBaseId}-tab";
+                        var contentTabPane = $"{contentBaseId}-pane";
                         var isActive = index == 0;
                         
                         <div class="tab-pane fade @(isActive ? "show active" : "")"
-                             id="@id"
+                             id="@contentTabPane"
                              role="tabpanel"
-                             aria-labelledby="@labeledBy"
+                             aria-labelledby="@contentTabId"
                              tabindex="@index">
                             <div class="row">
                                 <div class="col-md-6 col-sm-12">

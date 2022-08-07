@@ -317,7 +317,9 @@ public class ChallengeService
                     UserSubmission = request.Code,
                     SubmittedLanguage = request.Language,
                     ProgrammingChallengeId = challenge.Id,
-                    UserId = user.Id
+                    UserId = user.Id,
+                    DiscordGuildId = request.DiscordGuildId, 
+                    DiscordChannelId = request.DiscordChannelId
                 };
                 
                 _context.ProgrammingChallengeSubmissions.Add(existingSubmission);
