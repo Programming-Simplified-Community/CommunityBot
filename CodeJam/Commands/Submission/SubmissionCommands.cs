@@ -16,14 +16,9 @@ public class SubmissionCommands : InteractionModuleBase<SocketInteractionContext
     public ILogger<SubmissionCommands> Logger { get; set; }
 
     [SlashCommand("list", "output list of submissions")]
+    [RequireUserPermission(GuildPermission.BanMembers)]
     public async Task ListSubmissions()
     {
-        if (!Context.Guild.CurrentUser.Roles.Any(x => x.Name.ToLower().Contains("super_mega_ultra_moderator")))
-        {
-            await RespondAsync("Insufficient permissions", ephemeral: true);
-            return;
-        }
-
         try
         {
             var results = await Service.GetSubmissions();

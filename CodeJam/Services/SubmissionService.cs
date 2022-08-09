@@ -108,9 +108,17 @@ public class SubmissionService
             validationResult.Errors.Add(
                 "Either could not locate jam you're in, or you were outside the window to turn in");
         }
+
+        // List of valid providers
+        string[] validProviders =
+        {
+            "https://github.com",
+            "https://gitlab.com",
+            "https://dev.azure.com/"
+        };
         
         // we need to see if the repository is publicly available
-        if (request.GithubRepo.ToLower().StartsWith("https://github.com/"))
+        if (validProviders.Any(x=>request.GithubRepo.StartsWith(x, StringComparison.InvariantCultureIgnoreCase)))
         {
             var repoResponse = await _web.GetAsync(new Uri(request.GithubRepo), cancellationToken);
 
